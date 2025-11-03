@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Set; // ⚠️ Đảm bảo bạn đã import Set
+
 @Configuration
 @RequiredArgsConstructor
 public class DataInitializer {
@@ -19,43 +21,36 @@ public class DataInitializer {
                            UserRepository userRepo,
                            PasswordEncoder encoder) {
         return args -> {
-            // 1) Đảm bảo các role tồn tại (DB đang dùng tên KHÔNG prefix ROLE_)
-            roleRepo.findByName("ADMIN").orElseGet(() -> roleRepo.save(new Role(null, "ADMIN")));
-            roleRepo.findByName("DOCTOR").orElseGet(() -> roleRepo.save(new Role(null, "DOCTOR")));
-            roleRepo.findByName("NURSE").orElseGet(() -> roleRepo.save(new Role(null, "NURSE")));
-            roleRepo.findByName("PATIENT").orElseGet(() -> roleRepo.save(new Role(null, "PATIENT")));
+            
+            // 1) Đảm bảo các role (với prefix ROLE_) tồn tại
+            Role adminRole = roleRepo.findByName("ROLE_ADMIN").orElseGet(() -> 
+                roleRepo.save(new Role(null, "ROLE_ADMIN"))
+            );
+            roleRepo.findByName("ROLE_DOCTOR").orElseGet(() -> 
+                roleRepo.save(new Role(null, "ROLE_DOCTOR"))
+            );
+            roleRepo.findByName("ROLE_NURSE").orElseGet(() -> 
+                roleRepo.save(new Role(null, "ROLE_NURSE"))
+            );
+            roleRepo.findByName("ROLE_PATIENT").orElseGet(() -> 
+                roleRepo.save(new Role(null, "ROLE_PATIENT"))
+            );
 
-            // 2) Nếu chưa có bất kỳ user nào mang role ADMIN -> auto tạo/ nâng cấp
-            boolean hasAnyAdmin = userRepo.findAll().stream()
-                    .anyMatch(u -> u.getRole() != null && "ADMIN".equalsIgnoreCase(u.getRole().getName()));
+            // 2) Nếu chưa có bất kỳ user nào mang role ADMIN -> auto tạo
+            // (Code kiểm tra của bạn rất hay, nhưng chúng ta có thể làm đơn giản hơn
+            //  bằng cách chỉ kiểm tra sự tồn tại của 'admin')
 
-            if (!hasAnyAdmin) {
-                Role adminRole = roleRepo.findByName("ADMIN")
-                        .orElseThrow(() -> new IllegalStateException("Missing role ADMIN"));
-
-                // Nếu username 'admin' đã tồn tại nhưng chưa phải ADMIN -> nâng cấp
-                var existingAdminUsername = userRepo.findByUsername("admin");
-                if (existingAdminUsername.isPresent()) {
-                    User u = existingAdminUsername.get();
-                    u.setRole(adminRole);
-                    if (u.getPassword() == null || u.getPassword().isBlank()) {
-                        u.setPassword(encoder.encode("admin123")); // đổi sau khi đăng nhập
-                    }
-                    if (u.getFullName() == null || u.getFullName().isBlank()) {
-                        u.setFullName("System Administrator");
-                    }
-                    u.setEnabled(true);
-                    userRepo.save(u);
-                } else {
-                    // Tạo mới tài khoản admin mặc định
-                    User u = new User();
-                    u.setUsername("admin");
-                    u.setPassword(encoder.encode("admin123")); // đổi sau khi đăng nhập
-                    u.setFullName("System Administrator");
-                    u.setEnabled(true);
-                    u.setRole(adminRole); // 1 role duy nhất
-                    userRepo.save(u);
-                }
+            if (!userRepo.existsByUsername("admin")) {
+                // Tạo mới tài khoản admin mặc định
+                User u = new User();
+                u.setUsername("admin");
+                u.setPassword(encoder.encode("admin123")); // đổi sau khi đăng nhập
+                u.setFullName("System Administrator");
+                u.setEnabled(true);
+                u.setRole(adminRole); // Gán role đã có prefix
+                
+                userRepo.save(u);
+                System.out.println(">>>>>>>>>> ĐÃ TẠO USER ADMIN (ROLE_ADMIN) MẶC ĐỊNH <<<<<<<<<<");
             }
         };
     }
