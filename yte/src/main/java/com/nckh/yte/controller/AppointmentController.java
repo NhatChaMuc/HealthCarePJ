@@ -26,16 +26,17 @@ public class AppointmentController {
     private final NurseRepository nurseRepository;
     private final PatientRepository patientRepository;
 
-    // ✅ FIX: Logic autoSchedule đã hoàn thiện
     @PostMapping("/auto-schedule") 
     public ResponseEntity<Appointment> autoSchedule(@RequestBody Map<String, Object> body) {
         if (body == null) return ResponseEntity.badRequest().build();
         
-        // Logic trích xuất dữ liệu từ body (đã sửa lỗi cú pháp)
-        String fullName = body.containsKey("patient") && ((Map)body.get("patient")).containsKey("fullName") ? ((Map)body.get("patient")).get("fullName").toString() : null;
-        String email = body.containsKey("patient") && ((Map)body.get("patient")).containsKey("email") ? ((Map)body.get("patient")).get("email").toString() : null;
-        String phone = body.containsKey("patient") && ((Map)body.get("patient")).containsKey("phone") ? ((Map)body.get("patient")).get("phone").toString() : null;
-        String gender = body.containsKey("patient") && ((Map)body.get("patient")).containsKey("gender") ? ((Map)body.get("patient")).get("gender").toString() : null;
+        // Logic trích xuất dữ liệu từ body (FIX: Đảm bảo trích xuất an toàn)
+        Map patientMap = (Map) body.get("patient");
+        
+        String fullName = patientMap != null && patientMap.containsKey("fullName") ? patientMap.get("fullName").toString() : null;
+        String email = patientMap != null && patientMap.containsKey("email") ? patientMap.get("email").toString() : null;
+        String phone = patientMap != null && patientMap.containsKey("phone") ? patientMap.get("phone").toString() : null;
+        String gender = patientMap != null && patientMap.containsKey("gender") ? patientMap.get("gender").toString() : null;
         
         String symptom = body.containsKey("symptom") ? (String) body.get("symptom") : null;
         // Xử lý Date format từ FE (ISO 8601)
@@ -76,7 +77,6 @@ public class AppointmentController {
         
         // Admin
         else if (principal.hasAuthority("ROLE_ADMIN")) {
-            // ✅ FIX LỖI BIÊN DỊCH: Gọi hàm getAllAppointments đã được thêm vào Service
             return ResponseEntity.ok(appointmentService.getAllAppointments()); 
         }
 

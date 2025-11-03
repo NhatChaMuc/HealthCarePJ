@@ -35,12 +35,17 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
-                // ✅ Public
+                // ✅ Public - ĐĂNG NHẬP, ĐĂNG KÝ, SWAGGER
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/login", "/auth/login", "/api/auth/register", "/auth/register").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                // 🔑 API CẦN XÁC THỰC - SỬ DỤNG hasAuthority("ROLE_...") và ÁNH XẠ KÉP
+                // 🔑 FIX CHAT: Cho phép chat và ping cho TẤT CẢ mọi người (unauthenticated)
+                .requestMatchers("/api/ai/chat", "/ai/chat").permitAll()
+                .requestMatchers("/api/ai/chat/ping", "/ai/chat/ping").permitAll()
+                
+                // 🔑 API CẦN XÁC THỰC (Sử dụng Authority đầy đủ)
+                // Các API /ai/* khác (drug-info-full) vẫn yêu cầu xác thực
                 .requestMatchers("/api/ai/**", "/ai/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
                 .requestMatchers("/api/admin/**", "/admin/**").hasAuthority("ROLE_ADMIN") 
                 .requestMatchers("/api/doctor/**", "/doctor/**").hasAnyAuthority("ROLE_DOCTOR", "ROLE_ADMIN") 
@@ -69,7 +74,7 @@ public class SecurityConfig {
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        System.out.println("✅ SecurityConfig loaded (FINAL FIX: Consistent Roles)");
+        System.out.println("✅ SecurityConfig loaded (Chat is Public and Roles Consistent)");
         return http.build();
     }
 

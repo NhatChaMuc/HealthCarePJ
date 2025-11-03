@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-// ✅ FIX MAPPING: Ánh xạ tới cả /api/ai và /ai để giải quyết lỗi 404
+// ✅ FIX MAPPING: Ánh xạ tới cả /api/ai và /ai
 @RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
@@ -20,9 +20,9 @@ public class ChatController {
     public ResponseEntity<Map<String, Object>> chat(@RequestBody Map<String, String> body) {
         String message = body != null ? body.get("message") : null;
         String reply = chatService.generateAIResponse(message);
-        if (reply == null) reply = "⚠️ Không nhận được phản hồi từ AI.";
+        if (reply == null) return ResponseEntity.status(500).body(Map.of("error", "⚠️ Không nhận được phản hồi từ AI."));
 
-        // Xây JSON tương thích Gemini (Java 8 dùng Collections + Arrays)
+        // Logic trả về
         Map<String, Object> part = new HashMap<>();
         part.put("text", reply);
 

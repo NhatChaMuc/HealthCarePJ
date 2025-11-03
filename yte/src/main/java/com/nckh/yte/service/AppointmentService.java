@@ -44,13 +44,12 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    // ✅ FIX LỖI BIÊN DỊCH: Thêm hàm này để AdminController có thể gọi
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
 
 
-    // === HÀM AUTOBOOK ===
+    // === HÀM AUTOBOOK (FIX LOGIC) ===
     @Transactional
     public Appointment autoBook(String patientName, String email, String phone, String gender,
                                 String symptom, LocalDate preferredDate, String preferredWindow) {
@@ -58,27 +57,24 @@ public class AppointmentService {
         Patient patient = null;
         User user = null;
 
-        // ✅ BƯỚC 2: SỬ DỤNG GEMINI ĐỂ XÁC ĐỊNH CHUYÊN KHOA
+        // ✅ BƯỚC 1: SỬ DỤNG GEMINI ĐỂ XÁC ĐỊNH CHUYÊN KHOA
         String requiredSpecialty = null;
         try {
-            // Thử gọi Gemini trước
             requiredSpecialty = geminiService.determineSpecialtyFromSymptom(symptom);
         } catch (Exception e) {
             System.err.println("Lỗi nghiêm trọng khi gọi GeminiService, chuyển sang logic cũ. Lỗi: " + e.getMessage());
         }
 
-        // Nếu Gemini lỗi, hoặc trả về null/rỗng, DÙNG LOGIC CŨ (FALLBACK)
         if (requiredSpecialty == null || requiredSpecialty.trim().isEmpty()) {
             System.out.println("GEMINI FAILED hoặc trả về rỗng. Đang dùng logic dự phòng (legacy).");
-            requiredSpecialty = determineSpecialtyLegacy(symptom); // Đổi tên hàm cũ
+            requiredSpecialty = determineSpecialtyLegacy(symptom); 
         } else {
             System.out.println("GEMINI SUCCESS: Chuyên khoa được xác định: " + requiredSpecialty);
         }
 
-        // ✅ BƯỚC 3: Tìm User và Patient (Logic giữ nguyên)
+        // ✅ BƯỚC 2: Tìm User hiện tại
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl principal) {
-            // NOTE: Giữ nguyên hasRole ở đây vì đây là logic nghiệp vụ (business logic)
             if (principal.hasRole("PATIENT")) {
                 user = userRepository.findByUsername(principal.getUsername()).orElse(null);
                 if (user != null) {
@@ -87,10 +83,11 @@ public class AppointmentService {
             }
         }
 
-        // ✅ BƯỚC 4: Logic tạo Patient
-        if (patient == null) {
+        // ✅ BƯỚC 3: Logic tạo Patient Profile (Nếu User đã tồn tại nhưng Profile Patient chưa có)
+        if (patient == null && user != null) {
+            // User đã tồn tại (đã đăng nhập) nhưng chưa có hồ sơ Patient
             String fn, ln;
-            String fullName = (user != null && user.getFullName() != null) ? user.getFullName() : patientName;
+            String fullName = user.getFullName() != null ? user.getFullName() : patientName;
 
             if (fullName != null && !fullName.trim().isEmpty()) {
                 String[] parts = fullName.trim().split("\\s+", 2);
@@ -105,46 +102,48 @@ public class AppointmentService {
                     Patient.builder()
                             .firstName(fn)
                             .lastName(ln)
-                            .user(user)
-                            .department(requiredSpecialty) // Gán chuyên khoa ở đây
+                            .user(user) // Gán User đã tồn tại
+                            .department(requiredSpecialty)
                             .email(email)
                             .phone(phone)
                             .gender(gender)
                             .build()
             );
+        } else if (patient == null && user == null) {
+             // ⚠️ TRƯỜNG HỢP NÀY KHÔNG NÊN XẢY RA: User chưa đăng nhập.
+             // Nếu xảy ra, cần logic tạo User MỚI (và Role PATIENT) trước khi tạo Patient.
+             // Vì ta đang giả định User đã đăng nhập, ta sẽ báo lỗi nếu không tìm thấy User.
+             throw new RuntimeException("Lỗi logic: User không xác định.");
         }
 
-        // ✅ BƯỚC 5: CHỌN BÁC SĨ (Logic giữ nguyên)
+        // ✅ BƯỚC 4: CHỌN BÁC SĨ (Logic giữ nguyên)
         List<Doctor> specialists = doctorRepository.findBySpecialtyIgnoreCase(requiredSpecialty);
         Doctor doctor;
         
         if (!specialists.isEmpty()) {
             doctor = specialists.get(new Random().nextInt(specialists.size()));
         } else {
-            // Fallback: Nếu không có BS chuyên khoa -> chuyển về "Đa khoa"
             List<Doctor> generalists = doctorRepository.findBySpecialtyIgnoreCase("Đa khoa");
             if (!generalists.isEmpty()) {
                 System.out.println("Không tìm thấy BS chuyên khoa: " + requiredSpecialty + ". Chuyển về Đa khoa.");
                 doctor = generalists.get(new Random().nextInt(generalists.size()));
             } else {
-                // Trường hợp tệ nhất: Không có BS Đa khoa
                 List<Doctor> allDoctors = doctorRepository.findAll();
                 doctor = allDoctors.isEmpty() ? null : allDoctors.get(new Random().nextInt(allDoctors.size()));
             }
         }
 
-        // ✅ BƯỚC 6: Logic tính thời gian (Logic giữ nguyên)
+        // ✅ BƯỚC 5: Tạo Appointment (Logic giữ nguyên)
         LocalDateTime startTime;
         try {
-            String startTimeStr = preferredWindow.split("\\s*-\\s*")[0]; // Lấy "08:00"
-            LocalTime time = LocalTime.parse(startTimeStr); // Parse "08:00"
-            startTime = preferredDate.atTime(time); // Ghép ngày và giờ
+            String startTimeStr = preferredWindow.split("\\s*-\\s*")[0]; 
+            LocalTime time = LocalTime.parse(startTimeStr); 
+            startTime = preferredDate.atTime(time); 
         } catch (Exception e) {
-            startTime = preferredDate.atTime(8, 0); // Fallback nếu parse lỗi
+            startTime = preferredDate.atTime(8, 0); 
         }
         LocalDateTime endTime = startTime.plusMinutes(30);
 
-        // ✅ BƯỚC 7: Tạo Appointment (Logic giữ nguyên)
         Appointment appointment = Appointment.builder()
                 .patient(patient)
                 .doctor(doctor)
@@ -159,7 +158,6 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    // ✅ BƯỚC 8: ĐỔI TÊN HÀM CŨ (dùng làm fallback)
     private String determineSpecialtyLegacy(String reason) {
         if (reason == null || reason.trim().isEmpty()) return "Đa khoa";
         String r = reason.toLowerCase();
