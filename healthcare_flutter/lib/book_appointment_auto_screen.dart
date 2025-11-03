@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'app_config.dart'; // ✅ FIX: SỬ DỤNG IMPORT CHÍNH XÁC
 
-class AppConfig {
-  static const String baseUrl = 'http://172.17.11.9:8081/api'; // nếu Emulator
-  static const String ai = '$baseUrl/ai';
-}
+// ❌ LỚP AppConfig BỊ LỖI ĐÃ BỊ XÓA KHỎI ĐÂY
 
 class BookAppointmentAutoScreen extends StatefulWidget {
   final String token;
@@ -102,7 +100,6 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
     // SỬA LỖI:
     // Chỉ validate form của bước 2 (_form2Key).
     // _form1Key đã được validate khi nhấn "Tiếp Tục" ở bước 1.
-    // Nếu gọi _form1Key.currentState! ở đây sẽ lỗi, vì Form 1 không còn mounted.
     if (!_form2Key.currentState!.validate()) {
       _showSnack("⚠️ Vui lòng điền đầy đủ thông tin ở bước này.");
       return;
@@ -138,8 +135,10 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
     };
 
     try {
+      // ✅ FIX: GỌI ĐÚNG URL PRODUCTION
       final res = await http.post(
-        Uri.parse('${AppConfig.ai}/auto-schedule'),
+        // Lấy URL Production từ AppConfig chính
+        Uri.parse('${AppConfig.ai}/auto-schedule'), 
         headers: {
           'Authorization': 'Bearer ${widget.token}',
           'Content-Type': 'application/json',
@@ -154,6 +153,8 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
         _showSnack("❌ Lỗi server: HTTP ${res.statusCode}");
       }
     } catch (e) {
+      // ✅ GHI NHẬN LỖI ĐỂ KIỂM TRA
+      print("❌ Lỗi kết nối Appointment: $e");
       _showSnack("❌ Không thể kết nối đến máy chủ: $e");
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -465,7 +466,7 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
         const SizedBox(height: 6),
         const Text(
           "Cảm ơn bạn đã tin tưởng. Lịch hẹn của bạn đã được ghi nhận.",
-          textAlign: TextAlign.center,
+          textAlign: TextAlign: TextAlign.center,
           style: TextStyle(color: Colors.black54),
         ),
         const SizedBox(height: 20),
@@ -479,7 +480,7 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
         const SizedBox(height: 12),
         const Text(
           "Chúng tôi sẽ gửi thông tin xác nhận chi tiết qua email và tin nhắn SMS.\nVui lòng kiểm tra và có mặt trước 15 phút.",
-          textAlign: TextAlign.center,
+          textAlign: TextAlign: TextAlign.center,
           style: TextStyle(color: Colors.black54),
         ),
         const SizedBox(height: 20),
