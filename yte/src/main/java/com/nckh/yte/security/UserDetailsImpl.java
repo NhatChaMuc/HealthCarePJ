@@ -16,8 +16,8 @@ public class UserDetailsImpl implements UserDetails {
     private final String fullName;
     private final boolean enabled;
     private final String roleName;
-    private final Set<String> roles;
-    private final Collection<? extends GrantedAuthority> authorities;
+    private final Set<String> roles; // Dùng để check hasRole
+    private final Collection<? extends GrantedAuthority> authorities; // Dùng để check hasAuthority
 
     public UserDetailsImpl(User u) {
         this.id = u.getId();
@@ -39,19 +39,28 @@ public class UserDetailsImpl implements UserDetails {
         this.roleName = dbRole;
     }
 
+    // ✅ FIX LỖI: Triển khai hàm hasAuthority để khắc phục lỗi Unimplemented
+    @Override
+    public boolean hasAuthority(String authorityName) {
+        return this.authorities.stream()
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase(authorityName));
+    }
+    
+    // ✅ HÀM hasRole (Dùng cho code cũ của bạn)
     public boolean hasRole(String role) {
         return roles.contains(role);
     }
 
+    // === CÁC HÀM BẮT BUỘC KHÁC (UserDetails) ===
+    
+    @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
+    @Override public String getPassword() { return password; }
+    @Override public String getUsername() { return username; }
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
     @Override public boolean isEnabled() { return enabled; }
 
     public String getFullName() { return fullName; }
-
-    public boolean hasAuthority(String string) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'hasAuthority'");
-    }
+    public UUID getId() { return id; }
 }
