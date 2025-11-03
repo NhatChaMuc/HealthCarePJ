@@ -1,23 +1,28 @@
 package com.nckh.yte.security;
 
-import com.nckh.yte.entity.User;
-import lombok.Getter;
+import com.nckh.yte.entity.User; 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import lombok.Getter;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.Set; // Thêm Set import
 
-@Getter
+@Getter // Cần Lombok Getter
 public class UserDetailsImpl implements UserDetails {
+    // Khai báo các fields như trong code gốc của bạn
     private final UUID id;
     private final String username;
     private final String password;
     private final String fullName;
     private final boolean enabled;
     private final String roleName;
-    private final Set<String> roles; // Dùng để check hasRole
-    private final Collection<? extends GrantedAuthority> authorities; // Dùng để check hasAuthority
+    private final Set<String> roles; 
+    private final Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(User u) {
         this.id = u.getId();
@@ -26,41 +31,35 @@ public class UserDetailsImpl implements UserDetails {
         this.fullName = u.getFullName();
         this.enabled = u.isEnabled();
 
-        // DB chỉ chứa "ADMIN", "DOCTOR", "NURSE", "PATIENT"
-        String dbRole = Optional.ofNullable(u.getRole())
-                .map(r -> r.getName())
-                .orElse("PATIENT");
-
-        // ⚡️ authorities cần có prefix "ROLE_" cho Spring Security
+        String dbRole = (u.getRole() != null) ? u.getRole().getName() : "PATIENT";
+        
+        // Tạo Authorities
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + dbRole));
 
-        // Gửi ra FE vai trò không prefix
+        // Khởi tạo các trường khác
         this.roles = Set.of(dbRole);
         this.roleName = dbRole;
     }
 
-    // ✅ FIX LỖI: Triển khai hàm hasAuthority để khắc phục lỗi Unimplemented
-    @Override
+    // ✅ FIX: SỬA LỖI BIÊN DỊCH - Đảm bảo hàm này là @Override bắt buộc
+    @Override 
+    public Collection<? extends GrantedAuthority> getAuthorities() { 
+        return this.authorities; 
+    }
+
+    // ✅ FIX: HÀM BỊ THIẾU (Đã triển khai để Controller gọi)
     public boolean hasAuthority(String authorityName) {
         return this.authorities.stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase(authorityName));
     }
     
     // ✅ HÀM hasRole (Dùng cho code cũ của bạn)
-    public boolean hasRole(String role) {
-        return roles.contains(role);
+    public boolean hasRole(String roleName) {
+        return this.roles.contains(roleName); // So sánh với role KHÔNG prefix
     }
-
-    // === CÁC HÀM BẮT BUỘC KHÁC (UserDetails) ===
     
-    @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
-    @Override public String getPassword() { return password; }
-    @Override public String getUsername() { return username; }
+    // === CÁC HÀM BẮT BUỘC KHÁC (UserDetails) ===
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return enabled; }
-
-    public String getFullName() { return fullName; }
-    public UUID getId() { return id; }
 }
