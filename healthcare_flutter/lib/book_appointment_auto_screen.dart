@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'app_config.dart'; // ✅ FIX: SỬ DỤNG IMPORT CHÍNH XÁC
+import 'app_config.dart'; // ✅ FIX: Đã import AppConfig chính xác
 
-// ❌ LỚP AppConfig BỊ LỖI ĐÃ BỊ XÓA KHỎI ĐÂY
+// ❌ LỚP AppConfig GHI ĐÈ ĐÃ BỊ XÓA HOÀN TOÀN TỪ ĐÂY
 
 class BookAppointmentAutoScreen extends StatefulWidget {
   final String token;
@@ -97,15 +97,11 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
 
   // ========================= submit =========================
   Future<void> _submit() async {
-    // SỬA LỖI:
-    // Chỉ validate form của bước 2 (_form2Key).
-    // _form1Key đã được validate khi nhấn "Tiếp Tục" ở bước 1.
     if (!_form2Key.currentState!.validate()) {
       _showSnack("⚠️ Vui lòng điền đầy đủ thông tin ở bước này.");
       return;
     }
 
-    // Các kiểm tra còn lại giữ nguyên
     if (_preferredDate == null || _preferredWindow == null) {
       _showSnack("⚠️ Vui lòng chọn ngày và khung giờ hẹn.");
       return;
@@ -114,8 +110,6 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
     final birth = _parseDate(_birthCtl.text.trim());
     if (birth == null) {
       _showSnack("⚠️ Ngày sinh không hợp lệ (định dạng dd/MM/yyyy).");
-      // Cân nhắc trả về bước 1 nếu ngày sinh sai
-      // setState(() => _step = 1);
       return;
     }
 
@@ -135,9 +129,8 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
     };
 
     try {
-      // ✅ FIX: GỌI ĐÚNG URL PRODUCTION
+      // ✅ FIX: GỌI ĐÚNG URL PRODUCTION (Sử dụng AppConfig đã fix)
       final res = await http.post(
-        // Lấy URL Production từ AppConfig chính
         Uri.parse('${AppConfig.ai}/auto-schedule'), 
         headers: {
           'Authorization': 'Bearer ${widget.token}',
@@ -150,10 +143,11 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
         _successData = jsonDecode(res.body);
         setState(() => _step = 3);
       } else {
+        // Ghi log status code để kiểm tra lỗi Backend (403, 500, etc.)
+        print("❌ Lỗi server Appointment: HTTP ${res.statusCode}"); 
         _showSnack("❌ Lỗi server: HTTP ${res.statusCode}");
       }
     } catch (e) {
-      // ✅ GHI NHẬN LỖI ĐỂ KIỂM TRA
       print("❌ Lỗi kết nối Appointment: $e");
       _showSnack("❌ Không thể kết nối đến máy chủ: $e");
     } finally {
@@ -177,8 +171,6 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
   // ========================= UI =========================
   @override
   Widget build(BuildContext context) {
-    // Sử dụng SingleChildScrollView và ConstrainedBox để form không bị vỡ trên màn hình nhỏ
-    // và căn giữa trên màn hình lớn.
     return Scaffold(
       backgroundColor: const Color(0xFFEAF4FF),
       body: Center(
@@ -199,7 +191,6 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
                   )
                 ],
               ),
-              // AnimatedSwitcher để chuyển bước mượt hơn
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: _buildCurrentStep(),
@@ -414,7 +405,6 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
                 _whiteButton("Quay Lại",
                     onTap: () => setState(() => _step = 1)),
                 const SizedBox(width: 16),
-                // Sử dụng Flexible hoặc Expanded để button co dãn
                 Expanded(
                   child: _gradientButton(
                     _submitting ? "Đang xử lý..." : "Xác Nhận Đặt Lịch",
@@ -440,7 +430,6 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
       try {
         final dt = DateTime.parse(data["appointmentDate"]);
         final win = data["appointmentWindow"];
-        // Chuyển đổi window thành text
         String winText = win;
         if (win == "MORNING") winText = "Sáng";
         if (win == "AFTERNOON") winText = "Chiều";
@@ -466,7 +455,7 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
         const SizedBox(height: 6),
         const Text(
           "Cảm ơn bạn đã tin tưởng. Lịch hẹn của bạn đã được ghi nhận.",
-          textAlign: TextAlign: TextAlign.center,
+          textAlign: TextAlign.center,
           style: TextStyle(color: Colors.black54),
         ),
         const SizedBox(height: 20),
@@ -480,7 +469,7 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
         const SizedBox(height: 12),
         const Text(
           "Chúng tôi sẽ gửi thông tin xác nhận chi tiết qua email và tin nhắn SMS.\nVui lòng kiểm tra và có mặt trước 15 phút.",
-          textAlign: TextAlign: TextAlign.center,
+          textAlign: TextAlign.center,
           style: TextStyle(color: Colors.black54),
         ),
         const SizedBox(height: 20),
@@ -501,7 +490,6 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
           children: [
             Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(width: 12),
-            // Dùng Expanded để value tự động xuống hàng nếu quá dài
             Expanded(
               child: Text(
                 value.isEmpty ? "N/A" : value,
@@ -551,7 +539,6 @@ class _BookAppointmentAutoScreenState extends State<BookAppointmentAutoScreen> {
       );
 
   Widget _whiteButton(String text, {VoidCallback? onTap}) => Container(
-        // width: 150, // Bỏ width cố định để linh hoạt hơn
         height: 48,
         decoration: BoxDecoration(
           color: Colors.white,
