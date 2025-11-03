@@ -3,7 +3,7 @@ package com.nckh.yte.service;
 import com.nckh.yte.entity.*;
 import com.nckh.yte.repository.*;
 import com.nckh.yte.security.UserDetailsImpl;
-import lombok.RequiredArgsConstructor; // Đảm bảo import này
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.util.UUID;
 import java.util.Random;
 
 @Service
-@RequiredArgsConstructor // Lombok sẽ tự động tiêm các 'final' repository VÀ service
+@RequiredArgsConstructor
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
@@ -25,11 +25,9 @@ public class AppointmentService {
     private final DoctorRepository doctorRepository;
     private final NurseRepository nurseRepository;
     private final UserRepository userRepository;
-
-    // ✅ BƯỚC 1: TIÊM GEMINI SERVICE
     private final GeminiService geminiService;
 
-    // === CÁC HÀM GET (KHÔNG THAY ĐỔI) ===
+    // === CÁC HÀM GET ===
     public List<Appointment> getAppointmentsForDoctor(UUID doctorId) {
         return appointmentRepository.findByDoctorId(doctorId);
     }
@@ -46,8 +44,13 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
+    // ✅ FIX LỖI BIÊN DỊCH: Thêm hàm này để AdminController có thể gọi
+    public List<Appointment> getAllAppointments() {
+        return appointmentRepository.findAll();
+    }
 
-    // === HÀM AUTOBOOK ĐÃ SỬA ĐỔI ===
+
+    // === HÀM AUTOBOOK ===
     @Transactional
     public Appointment autoBook(String patientName, String email, String phone, String gender,
                                 String symptom, LocalDate preferredDate, String preferredWindow) {
@@ -75,6 +78,7 @@ public class AppointmentService {
         // ✅ BƯỚC 3: Tìm User và Patient (Logic giữ nguyên)
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl principal) {
+            // NOTE: Giữ nguyên hasRole ở đây vì đây là logic nghiệp vụ (business logic)
             if (principal.hasRole("PATIENT")) {
                 user = userRepository.findByUsername(principal.getUsername()).orElse(null);
                 if (user != null) {
@@ -83,7 +87,7 @@ public class AppointmentService {
             }
         }
 
-        // ✅ BƯỚC 4: Logic tạo Patient (giữ nguyên, nhưng giờ 'requiredSpecialty' đã thông minh hơn)
+        // ✅ BƯỚC 4: Logic tạo Patient
         if (patient == null) {
             String fn, ln;
             String fullName = (user != null && user.getFullName() != null) ? user.getFullName() : patientName;

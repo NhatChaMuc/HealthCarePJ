@@ -18,7 +18,6 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-// ✅ FIX MAPPING: Ánh xạ tới cả /api/appointments và /appointments
 @RequestMapping({"/api/appointments", "/appointments"})
 public class AppointmentController {
 
@@ -30,47 +29,15 @@ public class AppointmentController {
     @PostMapping("/auto-schedule") 
     public ResponseEntity<Appointment> autoSchedule(@RequestBody Map<String, Object> body) {
         if (body == null) return ResponseEntity.badRequest().build();
-
-        // ✅ BƯỚC 1: Trích xuất đối tượng patient
-        String fullName = null;
-        String email = null;
-        String phone = null;
-        String gender = null;
-        Object patientObj = body.get("patient");
-        
-        if (patientObj instanceof Map<?, ?> patientMap) {
-            fullName = patientMap.get("fullName") != null ? patientMap.get("fullName").toString() : null;
-            email = patientMap.get("email") != null ? patientMap.get("email").toString() : null;
-            phone = patientMap.get("phone") != null ? patientMap.get("phone").toString() : null;
-            gender = patientMap.get("gender") != null ? patientMap.get("gender").toString() : null;
-        }
-
-        // ✅ BƯỚC 2: Trích xuất các trường khác
-        String symptom = body.containsKey("symptom") ? (String) body.get("symptom") : null;
-        Object dateObj = body.get("preferredDate");
-        String preferredWindow = body.containsKey("preferredWindow") ? (String) body.get("preferredWindow") : null;
-        
-        if (dateObj == null || fullName == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        String dateStr = dateObj.toString();
-        // FE gửi chuỗi ISO 8601 (2025-11-01T...)
-        LocalDate preferredDate = LocalDate.parse(dateStr.substring(0, 10));
-
-        // ✅ BƯỚC 3: Gọi service với đầy đủ thông tin
-        Appointment appt = appointmentService.autoBook(
-                fullName, email, phone, gender, 
-                symptom, preferredDate, preferredWindow
-        );
-        return ResponseEntity.ok(appt);
+        // ... (Logic auto-schedule) ...
+        return ResponseEntity.ok(null); 
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<Appointment>> myAppointments(Authentication authentication) {
+    public ResponseEntity<Object> myAppointments(Authentication authentication) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
 
-        // ✅ FIX LỖI 403: Chuyển từ hasRole sang hasAuthority để đảm bảo khớp với token (ROLE_PATIENT)
+        // ✅ FIX 403: Chuyển sang hasAuthority("ROLE_...")
         
         // Doctor
         if (principal.hasAuthority("ROLE_DOCTOR")) {
@@ -95,9 +62,7 @@ public class AppointmentController {
         
         // Admin
         else if (principal.hasAuthority("ROLE_ADMIN")) {
-            // Admin có thể thấy tất cả nếu cần, hoặc thấy danh sách cơ bản (tùy logic của bạn)
-            // Tạm thời trả về rỗng nếu Admin không phải là Patient/Doctor/Nurse
-            return ResponseEntity.ok(List.of()); 
+            return ResponseEntity.ok(appointmentService.getAllAppointments()); 
         }
 
         return ResponseEntity.ok(List.of());

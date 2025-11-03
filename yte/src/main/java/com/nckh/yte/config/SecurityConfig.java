@@ -35,17 +35,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
-                // ✅ Preflight (browser)
+                // ✅ Public
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                // 🔑 Public: Đăng nhập và Đăng ký (FIX: Ánh xạ kép)
                 .requestMatchers("/api/auth/login", "/auth/login", "/api/auth/register", "/auth/register").permitAll()
-                
-                // ✅ Swagger
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                // ❌ TẤT CẢ API CẦN XÁC THỰC SỬ DỤNG hasAuthority("ROLE_...")
-                // Ánh xạ kép và Authority đầy đủ
+                // 🔑 API CẦN XÁC THỰC - SỬ DỤNG hasAuthority("ROLE_...") và ÁNH XẠ KÉP
                 .requestMatchers("/api/ai/**", "/ai/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
                 .requestMatchers("/api/admin/**", "/admin/**").hasAuthority("ROLE_ADMIN") 
                 .requestMatchers("/api/doctor/**", "/doctor/**").hasAnyAuthority("ROLE_DOCTOR", "ROLE_ADMIN") 
@@ -66,16 +61,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/info/**", "/info/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
                 
                 // User API
-                .requestMatchers("/api/user/**", "/user/**").authenticated() // Thêm UserController
+                .requestMatchers("/api/user/**", "/user/**").authenticated() 
                 
-                // ✅ Mặc định: cần xác thực
                 .anyRequest().authenticated()
             )
 
-            // ⚙️ Stateless JWT
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-            // ⚙️ Thêm filter JWT vào chain
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         System.out.println("✅ SecurityConfig loaded (FINAL FIX: Consistent Roles)");
