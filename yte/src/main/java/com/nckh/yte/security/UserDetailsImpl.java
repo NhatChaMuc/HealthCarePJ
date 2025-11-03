@@ -10,11 +10,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.Set; // Thêm Set import
+import java.util.Set; 
+import java.util.Optional; 
 
-@Getter // Cần Lombok Getter
+@Getter
 public class UserDetailsImpl implements UserDetails {
-    // Khai báo các fields như trong code gốc của bạn
     private final UUID id;
     private final String username;
     private final String password;
@@ -31,35 +31,33 @@ public class UserDetailsImpl implements UserDetails {
         this.fullName = u.getFullName();
         this.enabled = u.isEnabled();
 
-        String dbRole = (u.getRole() != null) ? u.getRole().getName() : "PATIENT";
-        
-        // Tạo Authorities
+        String dbRole = Optional.ofNullable(u.getRole())
+                .map(r -> r.getName())
+                .orElse("PATIENT");
+
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + dbRole));
 
-        // Khởi tạo các trường khác
         this.roles = Set.of(dbRole);
         this.roleName = dbRole;
     }
 
-    // ✅ FIX: SỬA LỖI BIÊN DỊCH - Đảm bảo hàm này là @Override bắt buộc
-    @Override 
+    // ✅ FIX: HÀM BỊ THIẾU
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() { 
         return this.authorities; 
     }
-
-    // ✅ FIX: HÀM BỊ THIẾU (Đã triển khai để Controller gọi)
+    
+    // ✅ HÀM CŨ: Dùng để kiểm tra trong Controller
     public boolean hasAuthority(String authorityName) {
         return this.authorities.stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase(authorityName));
     }
-    
-    // ✅ HÀM hasRole (Dùng cho code cũ của bạn)
-    public boolean hasRole(String roleName) {
-        return this.roles.contains(roleName); // So sánh với role KHÔNG prefix
-    }
-    
-    // === CÁC HÀM BẮT BUỘC KHÁC (UserDetails) ===
+
+    @Override public String getPassword() { return password; }
+    @Override public String getUsername() { return username; }
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return enabled; } 
+    public boolean hasRole(String roleName) { return this.roles.contains(roleName); }
 }
