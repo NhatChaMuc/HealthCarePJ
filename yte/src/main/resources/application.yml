@@ -1,5 +1,4 @@
-server:
-  port: 8081
+
 spring:
   datasource:
     # Đọc TOÀN BỘ thông tin DB từ Biến Môi trường
