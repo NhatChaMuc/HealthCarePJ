@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-// ✅ FIX MAPPING: Ánh xạ tới cả /api/patients và /patients để giải quyết lỗi 404
 @RequestMapping({"/api/patients", "/patients"})
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")

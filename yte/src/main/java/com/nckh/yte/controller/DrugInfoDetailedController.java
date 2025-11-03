@@ -15,6 +15,7 @@ import java.net.URI;
 import java.util.*;
 
 @RestController
+// ✅ FIX MAPPING: Ánh xạ tới cả /api/ai và /ai để giải quyết lỗi 404
 @RequestMapping({"/api/ai", "/ai"})
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")

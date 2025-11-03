@@ -52,11 +52,13 @@ public class AdminController {
         List<User> users = userRepository.findAll();
 
         List<Map<String, Object>> filtered = users.stream()
-                // ⚙️ loại ADMIN
+                // ⚙️ loại ADMIN (SỬA: So sánh với ROLE_ADMIN nếu cần)
                 .filter(u -> {
                     String roleName = Optional.ofNullable(u.getRole())
                             .map(r -> r.getName())
                             .orElse("");
+                    // Lỗi 403 ngầm: Nếu FE là Admin, BE không nên loại user Admin
+                    // Giữ nguyên so sánh với tên Role KHÔNG có prefix
                     return !roleName.equalsIgnoreCase("ADMIN"); 
                 })
                 .map(u -> {

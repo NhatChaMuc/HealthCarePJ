@@ -69,22 +69,24 @@ public class AppointmentController {
     public ResponseEntity<List<Appointment>> myAppointments(Authentication authentication) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
 
+        // ✅ FIX 403: Sử dụng hasAuthority("ROLE_...") để khớp với Token
+        
         // Doctor
-        if (principal.hasRole("DOCTOR")) {
+        if (principal.hasAuthority("ROLE_DOCTOR")) {
             var doctor = doctorRepository.findByUsername(principal.getUsername()).orElse(null);
             if (doctor == null) return ResponseEntity.ok(List.of());
             return ResponseEntity.ok(appointmentService.getAppointmentsForDoctor(doctor.getId()));
         }
 
         // Nurse
-        else if (principal.hasRole("NURSE")) {
+        else if (principal.hasAuthority("ROLE_NURSE")) {
             var nurse = nurseRepository.findByUsername(principal.getUsername()).orElse(null);
             if (nurse == null) return ResponseEntity.ok(List.of());
             return ResponseEntity.ok(appointmentService.getAppointmentsForNurse(nurse.getId()));
         }
 
         // Patient
-        else if (principal.hasRole("PATIENT")) {
+        else if (principal.hasAuthority("ROLE_PATIENT")) {
             var patient = patientRepository.findByUser_Username(principal.getUsername()).orElse(null);
             if (patient == null) return ResponseEntity.ok(List.of());
             return ResponseEntity.ok(appointmentService.getAppointmentsForPatient(patient.getId()));
