@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/patients")
+// ✅ FIX: Sửa đường dẫn để khớp với Log (cả /api/patients và /patients)
+@RequestMapping({"/api/patients", "/patients"})
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class PatientController {

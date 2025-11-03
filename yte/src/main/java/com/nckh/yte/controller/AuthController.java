@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-// ✅ FIX: Sửa đường dẫn để khớp với Log thực tế (cả /api/auth và /auth)
+// ✅ FIX: Sửa đường dẫn để khớp với Log (cả /api/auth và /auth)
 @RequestMapping({"/api/auth", "/auth"}) 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequiredArgsConstructor

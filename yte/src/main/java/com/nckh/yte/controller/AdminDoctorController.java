@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/admin")
+// ✅ FIX: Sửa đường dẫn để khớp với Log (cả /api/admin và /admin)
+@RequestMapping({"/api/admin", "/admin"})
 @CrossOrigin(origins = "*")
 public record AdminDoctorController(DoctorService service) {
 

@@ -8,16 +8,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/ai")
+// ✅ FIX: Sửa đường dẫn để khớp với Log (cả /api/ai và /ai)
+@RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class ChatController {
 
     private final ChatService chatService;
 
-    /**
-     * Chat với AI (Gemini)
-     */
+    // ... (Giữ nguyên các hàm bên trong) ...
+
     @PostMapping("/chat")
     public ResponseEntity<Map<String, Object>> chat(@RequestBody Map<String, String> body) {
         String message = body != null ? body.get("message") : null;
@@ -41,9 +41,6 @@ public class ChatController {
         return ResponseEntity.ok(resp);
     }
 
-    /**
-     * Ping để kiểm tra server đang hoạt động
-     */
     @GetMapping("/chat/ping")
     public ResponseEntity<Map<String, String>> ping() {
         Map<String, String> map = new HashMap<>();
@@ -51,9 +48,6 @@ public class ChatController {
         return ResponseEntity.ok(map);
     }
 
-    /**
-     * Gửi tin nhắn giữa người dùng và bác sĩ (demo)
-     */
     @PostMapping("/chat/send")
     public ResponseEntity<Map<String, String>> sendChat(@RequestBody Map<String, String> body) {
         String senderId = body != null ? body.get("senderId") : null;

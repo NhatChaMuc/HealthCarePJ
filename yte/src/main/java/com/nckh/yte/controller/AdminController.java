@@ -12,11 +12,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-    import java.util.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/admin")
+// ✅ FIX: Sửa đường dẫn để khớp với Log (cả /api/admin và /admin)
+@RequestMapping({"/api/admin", "/admin"}) 
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -25,9 +26,8 @@ public class AdminController {
     private final DoctorRepository doctorRepository;
     private final NurseRepository nurseRepository;
 
-    // =========================
-    // HEALTH CHECK
-    // =========================
+    // ... (Giữ nguyên các hàm bên trong) ...
+
     @GetMapping("/health")
     public ResponseEntity<?> health() {
         return ResponseEntity.ok(Map.of(
@@ -36,9 +36,6 @@ public class AdminController {
         ));
     }
 
-    // =========================
-    // THÔNG TIN ADMIN HIỆN TẠI
-    // =========================
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication auth) {
         String username = (auth != null ? auth.getName() : "anonymous");
@@ -53,9 +50,6 @@ public class AdminController {
         ));
     }
 
-    // =========================
-    // LẤY DANH SÁCH USER (TRỪ ADMIN)
-    // =========================
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers() {
         List<User> users = userRepository.findAll();
@@ -91,9 +85,6 @@ public class AdminController {
         return ResponseEntity.ok(filtered);
     }
 
-    // =========================
-    // RESET PASSWORD (UUID)
-    // =========================
     @PostMapping("/users/{id}/reset-password")
     public ResponseEntity<?> resetPassword(
             @PathVariable UUID id,
@@ -119,14 +110,6 @@ public class AdminController {
         ));
     }
 
-    // =========================
-    // XOÁ TÀI KHOẢN (UUID)
-    // =========================
-    /**
-     * Xoá tài khoản người dùng dựa trên UUID. Đồng thời,
-     * nếu user thuộc vai trò DOCTOR hoặc NURSE thì sẽ duyệt qua
-     * danh sách bác sĩ hoặc y tá và xoá bản ghi có username trùng khớp.
-     */
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
         Optional<User> opt = userRepository.findById(id);
@@ -170,5 +153,4 @@ public class AdminController {
                 "username", username
         ));
     }
-
 }
