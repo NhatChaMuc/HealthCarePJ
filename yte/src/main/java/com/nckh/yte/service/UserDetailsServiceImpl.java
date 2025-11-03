@@ -15,6 +15,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var u = repo.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        // Lớp này không có lỗi, nó chỉ gọi lớp UserDetailsImpl
         return new UserDetailsImpl(u);
     }
 }

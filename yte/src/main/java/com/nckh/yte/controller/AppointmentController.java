@@ -29,15 +29,16 @@ public class AppointmentController {
     @PostMapping("/auto-schedule") 
     public ResponseEntity<Appointment> autoSchedule(@RequestBody Map<String, Object> body) {
         if (body == null) return ResponseEntity.badRequest().build();
-        // ... (Logic auto-schedule) ...
+        // Logic auto-schedule...
+        // Tạm thời trả về rỗng để tránh lỗi biên dịch nếu logic phức tạp bị thiếu
         return ResponseEntity.ok(null); 
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Object> myAppointments(Authentication authentication) {
+    public ResponseEntity<List<Appointment>> myAppointments(Authentication authentication) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
 
-        // ✅ FIX 403: Chuyển sang hasAuthority("ROLE_...")
+        // ✅ FIX 403: Sử dụng hàm hasAuthority MỚI được triển khai
         
         // Doctor
         if (principal.hasAuthority("ROLE_DOCTOR")) {
@@ -62,6 +63,7 @@ public class AppointmentController {
         
         // Admin
         else if (principal.hasAuthority("ROLE_ADMIN")) {
+            // Lỗi biên dịch: Gọi hàm đã FIX trong AppointmentService.java
             return ResponseEntity.ok(appointmentService.getAllAppointments()); 
         }
 
