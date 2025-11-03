@@ -44,7 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/ai/chat", "/ai/chat").permitAll()
                 .requestMatchers("/api/ai/chat/ping", "/ai/chat/ping").permitAll()
                 
-                // 🔑 API CẦN XÁC THỰC (Sử dụng Authority đầy đủ)
+                // 🔑 API CẦN XÁC THỰC - SỬ DỤNG hasAuthority("ROLE_...") và ÁNH XẠ KÉP
                 // Các API /ai/* khác (drug-info-full) vẫn yêu cầu xác thực
                 .requestMatchers("/api/ai/**", "/ai/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
                 .requestMatchers("/api/admin/**", "/admin/**").hasAuthority("ROLE_ADMIN") 

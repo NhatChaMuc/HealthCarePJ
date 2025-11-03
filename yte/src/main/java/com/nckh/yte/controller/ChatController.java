@@ -22,7 +22,7 @@ public class ChatController {
         String reply = chatService.generateAIResponse(message);
         if (reply == null) return ResponseEntity.status(500).body(Map.of("error", "⚠️ Không nhận được phản hồi từ AI."));
 
-        // Logic trả về
+        // Xây JSON tương thích Gemini (Java 8 dùng Collections + Arrays)
         Map<String, Object> part = new HashMap<>();
         part.put("text", reply);
 
