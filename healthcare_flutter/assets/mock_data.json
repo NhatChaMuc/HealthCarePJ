@@ -1,0 +1,56 @@
+{
+  "patients": [
+    {
+      "id": "p1",
+      "firstName": "Anh",
+      "lastName": "Hai",
+      "dob": "1998-10-12",
+      "phone": "0909000001",
+      "email": "hai@example.com",
+      "address": "HCM City"
+    },
+    {
+      "id": "p2",
+      "firstName": "Lan",
+      "lastName": "Nguyen",
+      "dob": "1996-06-02",
+      "phone": "0909000002",
+      "email": "lan@example.com",
+      "address": "Ha Noi"
+    }
+  ],
+  "doctors": [
+    {
+      "id": "d1",
+      "firstName": "Minh",
+      "lastName": "Tran",
+      "specialty": "Cardiology",
+      "phone": "0909888777",
+      "email": "minh.tran@hospital.vn"
+    },
+    {
+      "id": "d2",
+      "firstName": "Hoa",
+      "lastName": "Pham",
+      "specialty": "Pediatrics",
+      "phone": "0909555666",
+      "email": "hoa.pham@hospital.vn"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "a1",
+      "patientId": "p1",
+      "doctorId": "d1",
+      "time": "2025-10-13T09:30:00",
+      "reason": "Khám tim mạch"
+    },
+    {
+      "id": "a2",
+      "patientId": "p2",
+      "doctorId": "d2",
+      "time": "2025-10-14T14:00:00",
+      "reason": "Khám tổng quát"
+    }
+  ]
+}

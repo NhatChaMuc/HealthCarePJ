@@ -1,0 +1,29 @@
+#=================
+# General
+#=================
+.DS_Store
+.vscode/
+
+#=================
+# Flutter (healthcare_flutter)
+#=================
+healthcare_flutter/build/
+healthcare_flutter/.dart_tool/
+healthcare_flutter/.flutter-plugins
+healthcare_flutter/.flutter-plugins-dependencies
+healthcare_flutter/.pub-cache/
+healthcare_flutter/*.iml
+healthcare_flutter/.metadata
+
+#=================
+# Java / Spring Boot (yte)
+#=================
+yte/target/
+yte/build/
+yte/.gradle/
+yte/*.jar
+yte/*.war
+yte/hs_err_pid*
+yte/.idea/
+yte/*.iml
+yte/logs/

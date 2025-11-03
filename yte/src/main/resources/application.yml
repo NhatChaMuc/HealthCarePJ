@@ -1,0 +1,42 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    # URL local này an toàn
+    url: jdbc:postgresql://localhost:5432/yte
+    # Username 'postgres' là mặc định, an toàn
+    username: postgres 
+    # Đọc mật khẩu từ Biến Môi trường
+    password: ${DB_PASSWORD} 
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        "[format_sql]": true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Đọc JWT secret từ Biến Môi trường
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: 86400000  # 24h
+
+# Đọc API keys từ Biến Môi trường
+ai:
+  gemini:
+    model: gemini-2.0-flash
+    apikey: ${GEMINI_API_KEY}
+    baseurl: "https://generativelanguage.googleapis.com/v1beta/models/"
+
+  openai:
+    model: gpt-4o-mini
+    apikey: ${OPENAI_API_KEY}
+    baseurl: "https://api.openai.com/v1"
