@@ -16,8 +16,9 @@ RUN mvn package -DskipTests
 
 # ---
 
-# Giai đoạn 2: Chạy ứng dụng (dùng ảnh eclipse-temurin JRE nhỏ gọn)
-FROM eclipse-temurin:17-jre-slim
+# Giai đoạn 2: Chạy ứng dụng (dùng ảnh eclipse-temurin JRE chuẩn)
+# HÃY DÙNG DÒNG NÀY (Không có -slim)
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
