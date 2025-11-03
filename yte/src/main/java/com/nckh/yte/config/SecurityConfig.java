@@ -38,25 +38,25 @@ public class SecurityConfig {
                 // ✅ Preflight (browser)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ Public: login + swagger
-                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                // 🔑 Public: Đăng nhập và Đăng ký (ĐÃ SỬA LỖI, LIỆT KÊ CỤ THỂ)
+                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                
+                // ✅ Swagger (VẪN CHO PHÉP PUBLIC)
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                 // ❌ KHÔNG còn permitAll cho /api/ai/**
-                // *** SỬA: Dùng hasAnyAuthority thay vì hasAnyRole ***
+                // SỬ DỤNG hasAnyAuthority để khớp với tên Role KHÔNG có prefix
                 .requestMatchers("/api/ai/**")
                     .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
 
                 // ✅ Admin APIs
-                // *** SỬA: Dùng hasAuthority thay vì hasRole ***
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
                 // ✅ Doctor & Nurse APIs
-                // *** SỬA: Dùng hasAnyAuthority thay vì hasAnyRole ***
                 .requestMatchers("/api/doctor/**").hasAnyAuthority("DOCTOR", "ADMIN")
                 .requestMatchers("/api/nurse/**").hasAnyAuthority("NURSE", "ADMIN")
 
                 // ✅ Patient APIs
-                // *** SỬA: Dùng hasAnyAuthority/hasAuthority ***
                 .requestMatchers(HttpMethod.GET, "/api/patients/**")
                     .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE")
                 .requestMatchers(HttpMethod.POST, "/api/patients/**").hasAuthority("ADMIN")
@@ -64,7 +64,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/patients/**").hasAuthority("ADMIN")
 
                 // ✅ Appointment APIs
-                // *** SỬA: Dùng hasAnyAuthority ***
                 .requestMatchers(HttpMethod.GET, "/api/appointments/**")
                     .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
                 .requestMatchers(HttpMethod.POST, "/api/appointments/auto-schedule")
@@ -73,7 +72,6 @@ public class SecurityConfig {
                     .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE")
 
                 // ✅ Info APIs
-                // *** SỬA: Dùng hasAnyAuthority ***
                 .requestMatchers("/api/info/**")
                     .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
 
@@ -87,7 +85,7 @@ public class SecurityConfig {
             // ⚙️ Thêm filter JWT vào chain
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        System.out.println("✅ SecurityConfig loaded (SỬ DỤNG hasAuthority)");
+        System.out.println("✅ SecurityConfig loaded (FINAL FIX: Login/Register permitAll)");
         return http.build();
     }
 
