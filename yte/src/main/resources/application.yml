@@ -1,16 +1,12 @@
 server:
   port: 8081
-
 spring:
   datasource:
-    # URL local này an toàn
-    url: jdbc:postgresql://localhost:5432/yte
-    # Username 'postgres' là mặc định, an toàn
-    username: postgres 
-    # Đọc mật khẩu từ Biến Môi trường
-    password: ${DB_PASSWORD} 
+    # Đọc TOÀN BỘ thông tin DB từ Biến Môi trường
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
