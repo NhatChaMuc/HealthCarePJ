@@ -38,16 +38,17 @@ public class SecurityConfig {
                 // ✅ Preflight (browser)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // 🔑 Public: Đăng nhập và Đăng ký (ĐÃ SỬA LỖI, LIỆT KÊ CỤ THỂ)
-                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                // 🔑 Public: Đăng nhập và Đăng ký (FIX LỖI PATH: /auth/login)
+                // Đảm bảo khớp cả path có và không có /api/
+                .requestMatchers("/api/auth/login", "/auth/login").permitAll()
+                .requestMatchers("/api/auth/register", "/auth/register").permitAll()
                 
-                // ✅ Swagger (VẪN CHO PHÉP PUBLIC)
+                // ✅ Swagger
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                 // ❌ KHÔNG còn permitAll cho /api/ai/**
                 // SỬ DỤNG hasAnyAuthority để khớp với tên Role KHÔNG có prefix
-                .requestMatchers("/api/ai/**")
-                    .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
+                .requestMatchers("/api/ai/**").hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
 
                 // ✅ Admin APIs
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
@@ -85,7 +86,7 @@ public class SecurityConfig {
             // ⚙️ Thêm filter JWT vào chain
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        System.out.println("✅ SecurityConfig loaded (FINAL FIX: Login/Register permitAll)");
+        System.out.println("✅ SecurityConfig loaded (FINAL PATH FIX)");
         return http.build();
     }
 
