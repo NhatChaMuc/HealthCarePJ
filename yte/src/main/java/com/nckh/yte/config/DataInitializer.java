@@ -10,8 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Set;
-
 @Configuration
 @RequiredArgsConstructor
 public class DataInitializer {
@@ -23,7 +21,9 @@ public class DataInitializer {
             PasswordEncoder encoder) {
         
         return args -> {
-            // 1) Đảm bảo các role (KHÔNG có prefix ROLE_) tồn tại
+            // 1) Đảm bảo các role (KHÔNG có prefix ROLE_) tồn tại trong DB
+            // NOTE: Nếu JwtUtil của bạn tự thêm ROLE_, DB phải lưu tên KHÔNG ROLE_
+            // Để BE có thể xử lý mapping
             Role adminRole = roleRepo.findByName("ADMIN").orElseGet(() -> 
                 roleRepo.save(new Role(null, "ADMIN"))
             );
