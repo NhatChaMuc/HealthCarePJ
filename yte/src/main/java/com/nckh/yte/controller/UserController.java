@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
+// ✅ FIX: Ánh xạ tới cả /api/user và /user
 @RequestMapping({"/api/user", "/user"})
 @RequiredArgsConstructor
 public class UserController {
@@ -23,7 +24,8 @@ public class UserController {
     @GetMapping("/profile/{id}")
     public ResponseEntity<?> profile(@PathVariable UUID id, Authentication auth) {
         var me = (UserDetailsImpl) auth.getPrincipal();
-        if (!me.getId().equals(id) && !me.hasAuthority("ADMIN"))
+        // ✅ FIX LỖI 403: Đổi "ADMIN" thành "ROLE_ADMIN"
+        if (!me.getId().equals(id) && !me.hasAuthority("ROLE_ADMIN")) 
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("❌ Không có quyền");
         return ResponseEntity.ok(repo.findById(id));
     }
