@@ -18,6 +18,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+// ✅ FIX MAPPING: Ánh xạ tới cả /api/appointments và /appointments
 @RequestMapping({"/api/appointments", "/appointments"})
 public class AppointmentController {
 
@@ -69,7 +70,7 @@ public class AppointmentController {
     public ResponseEntity<List<Appointment>> myAppointments(Authentication authentication) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
 
-        // ✅ FIX 403: Sử dụng hasAuthority("ROLE_...") để khớp với Token
+        // ✅ FIX LỖI 403: Chuyển từ hasRole sang hasAuthority để đảm bảo khớp với token (ROLE_PATIENT)
         
         // Doctor
         if (principal.hasAuthority("ROLE_DOCTOR")) {
@@ -90,6 +91,13 @@ public class AppointmentController {
             var patient = patientRepository.findByUser_Username(principal.getUsername()).orElse(null);
             if (patient == null) return ResponseEntity.ok(List.of());
             return ResponseEntity.ok(appointmentService.getAppointmentsForPatient(patient.getId()));
+        }
+        
+        // Admin
+        else if (principal.hasAuthority("ROLE_ADMIN")) {
+            // Admin có thể thấy tất cả nếu cần, hoặc thấy danh sách cơ bản (tùy logic của bạn)
+            // Tạm thời trả về rỗng nếu Admin không phải là Patient/Doctor/Nurse
+            return ResponseEntity.ok(List.of()); 
         }
 
         return ResponseEntity.ok(List.of());
