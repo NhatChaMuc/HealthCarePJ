@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-// ✅ FIX: Sửa đường dẫn để khớp với Log (cả /api/ai và /ai)
+// ✅ FIX MAPPING: Ánh xạ tới cả /api/ai và /ai
 @RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor

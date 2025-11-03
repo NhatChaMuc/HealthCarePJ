@@ -18,6 +18,8 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+// ✅ FIX MAPPING: Ánh xạ tới cả /api/appointments và /appointments
+@RequestMapping({"/api/appointments", "/appointments"})
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
@@ -25,7 +27,8 @@ public class AppointmentController {
     private final NurseRepository nurseRepository;
     private final PatientRepository patientRepository;
 
-    @PostMapping("/api/ai/auto-schedule")
+    // 🎯 Hàm này cần gọi đến: /appointments/auto-schedule (đã fix trong SecurityConfig)
+    @PostMapping("/auto-schedule") 
     public ResponseEntity<Appointment> autoSchedule(@RequestBody Map<String, Object> body) {
         if (body == null) return ResponseEntity.badRequest().build();
 
@@ -64,8 +67,8 @@ public class AppointmentController {
         return ResponseEntity.ok(appt);
     }
 
-    // ... (Phần GetMapping /api/appointments/me không đổi) ...
-    @GetMapping("/api/appointments/me")
+    // ✅ Sửa: Bỏ prefix /api/appointments/ vì nó đã ở @RequestMapping
+    @GetMapping("/me")
     public ResponseEntity<List<Appointment>> myAppointments(Authentication authentication) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
 

@@ -39,7 +39,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // 🔑 Public: Đăng nhập và Đăng ký (FIX LỖI PATH: /auth/login)
-                // Đảm bảo khớp cả path có và không có /api/
                 .requestMatchers("/api/auth/login", "/auth/login").permitAll()
                 .requestMatchers("/api/auth/register", "/auth/register").permitAll()
                 
@@ -51,30 +50,29 @@ public class SecurityConfig {
                 .requestMatchers("/api/ai/**").hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
 
                 // ✅ Admin APIs
-                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-
+                .requestMatchers("/api/admin/**", "/admin/**").hasAuthority("ADMIN") // FIX MAPPING 404
+                
                 // ✅ Doctor & Nurse APIs
-                .requestMatchers("/api/doctor/**").hasAnyAuthority("DOCTOR", "ADMIN")
-                .requestMatchers("/api/nurse/**").hasAnyAuthority("NURSE", "ADMIN")
+                .requestMatchers("/api/doctor/**", "/doctor/**").hasAnyAuthority("DOCTOR", "ADMIN") // FIX MAPPING 404
+                .requestMatchers("/api/nurse/**", "/nurse/**").hasAnyAuthority("NURSE", "ADMIN") // FIX MAPPING 404
 
                 // ✅ Patient APIs
-                .requestMatchers(HttpMethod.GET, "/api/patients/**")
+                .requestMatchers(HttpMethod.GET, "/api/patients/**", "/patients/**")
                     .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE")
-                .requestMatchers(HttpMethod.POST, "/api/patients/**").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/patients/**").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/patients/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/patients/**", "/patients/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/patients/**", "/patients/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/patients/**", "/patients/**").hasAuthority("ADMIN")
 
                 // ✅ Appointment APIs
-                .requestMatchers(HttpMethod.GET, "/api/appointments/**")
+                .requestMatchers(HttpMethod.GET, "/api/appointments/**", "/appointments/**")
                     .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
-                .requestMatchers(HttpMethod.POST, "/api/appointments/auto-schedule")
+                .requestMatchers(HttpMethod.POST, "/api/appointments/auto-schedule", "/appointments/auto-schedule")
                     .hasAnyAuthority("PATIENT", "DOCTOR")
-                .requestMatchers("/api/appointments/**")
+                .requestMatchers("/api/appointments/**", "/appointments/**")
                     .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE")
 
                 // ✅ Info APIs
-                .requestMatchers("/api/info/**")
-                    .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
+                .requestMatchers("/api/info/**", "/info/**").hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
 
                 // ✅ Mặc định: cần xác thực
                 .anyRequest().authenticated()

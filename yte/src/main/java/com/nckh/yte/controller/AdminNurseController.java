@@ -11,7 +11,7 @@ import java.util.Map;
  * Controller cho chức năng quản lý y tá.  
  */
 @RestController
-// ✅ FIX: Sửa đường dẫn để khớp với Log (cả /api/admin và /admin)
+// ✅ FIX: Ánh xạ tới cả /api/admin và /admin
 @RequestMapping({"/api/admin", "/admin"}) 
 @CrossOrigin(origins = "*")
 public record AdminNurseController(NurseService service) {
