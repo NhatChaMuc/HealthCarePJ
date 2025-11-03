@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
+// ✅ FIX MAPPING: Ánh xạ tới cả /api/ai và /ai để giải quyết lỗi 404
 @RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor

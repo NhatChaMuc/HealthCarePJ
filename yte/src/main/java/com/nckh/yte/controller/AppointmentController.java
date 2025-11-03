@@ -26,20 +26,33 @@ public class AppointmentController {
     private final NurseRepository nurseRepository;
     private final PatientRepository patientRepository;
 
+    // ✅ FIX: Logic autoSchedule đã hoàn thiện
     @PostMapping("/auto-schedule") 
     public ResponseEntity<Appointment> autoSchedule(@RequestBody Map<String, Object> body) {
         if (body == null) return ResponseEntity.badRequest().build();
-        // Logic auto-schedule...
-        // Tạm thời trả về rỗng để tránh lỗi biên dịch nếu logic phức tạp bị thiếu
-        return ResponseEntity.ok(null); 
+        
+        // Logic trích xuất dữ liệu từ body (đã sửa lỗi cú pháp)
+        String fullName = body.containsKey("patient") && ((Map)body.get("patient")).containsKey("fullName") ? ((Map)body.get("patient")).get("fullName").toString() : null;
+        String email = body.containsKey("patient") && ((Map)body.get("patient")).containsKey("email") ? ((Map)body.get("patient")).get("email").toString() : null;
+        String phone = body.containsKey("patient") && ((Map)body.get("patient")).containsKey("phone") ? ((Map)body.get("patient")).get("phone").toString() : null;
+        String gender = body.containsKey("patient") && ((Map)body.get("patient")).containsKey("gender") ? ((Map)body.get("patient")).get("gender").toString() : null;
+        
+        String symptom = body.containsKey("symptom") ? (String) body.get("symptom") : null;
+        // Xử lý Date format từ FE (ISO 8601)
+        LocalDate preferredDate = body.containsKey("preferredDate") ? LocalDate.parse(body.get("preferredDate").toString().substring(0, 10)) : null;
+        String preferredWindow = body.containsKey("preferredWindow") ? (String) body.get("preferredWindow") : null;
+
+        if (fullName == null || symptom == null || preferredDate == null || preferredWindow == null) return ResponseEntity.badRequest().build();
+
+        // ✅ GỌI HÀM SERVICE CHÍNH XÁC
+        Appointment appointment = appointmentService.autoBook(fullName, email, phone, gender, symptom, preferredDate, preferredWindow);
+        return ResponseEntity.ok(appointment); 
     }
 
     @GetMapping("/me")
     public ResponseEntity<List<Appointment>> myAppointments(Authentication authentication) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
 
-        // ✅ FIX 403: Sử dụng hàm hasAuthority MỚI được triển khai
-        
         // Doctor
         if (principal.hasAuthority("ROLE_DOCTOR")) {
             var doctor = doctorRepository.findByUsername(principal.getUsername()).orElse(null);
@@ -63,7 +76,7 @@ public class AppointmentController {
         
         // Admin
         else if (principal.hasAuthority("ROLE_ADMIN")) {
-            // Lỗi biên dịch: Gọi hàm đã FIX trong AppointmentService.java
+            // ✅ FIX LỖI BIÊN DỊCH: Gọi hàm getAllAppointments đã được thêm vào Service
             return ResponseEntity.ok(appointmentService.getAllAppointments()); 
         }
 
