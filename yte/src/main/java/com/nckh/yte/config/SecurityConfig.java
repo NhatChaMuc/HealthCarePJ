@@ -42,34 +42,40 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                 // ❌ KHÔNG còn permitAll cho /api/ai/**
+                // *** SỬA: Dùng hasAnyAuthority thay vì hasAnyRole ***
                 .requestMatchers("/api/ai/**")
-                    .hasAnyRole("ADMIN", "DOCTOR", "NURSE", "PATIENT")
+                    .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
 
                 // ✅ Admin APIs
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // *** SỬA: Dùng hasAuthority thay vì hasRole ***
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
                 // ✅ Doctor & Nurse APIs
-                .requestMatchers("/api/doctor/**").hasAnyRole("DOCTOR", "ADMIN")
-                .requestMatchers("/api/nurse/**").hasAnyRole("NURSE", "ADMIN")
+                // *** SỬA: Dùng hasAnyAuthority thay vì hasAnyRole ***
+                .requestMatchers("/api/doctor/**").hasAnyAuthority("DOCTOR", "ADMIN")
+                .requestMatchers("/api/nurse/**").hasAnyAuthority("NURSE", "ADMIN")
 
                 // ✅ Patient APIs
+                // *** SỬA: Dùng hasAnyAuthority/hasAuthority ***
                 .requestMatchers(HttpMethod.GET, "/api/patients/**")
-                    .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
-                .requestMatchers(HttpMethod.POST, "/api/patients/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/patients/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/patients/**").hasRole("ADMIN")
+                    .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE")
+                .requestMatchers(HttpMethod.POST, "/api/patients/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/patients/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/patients/**").hasAuthority("ADMIN")
 
                 // ✅ Appointment APIs
+                // *** SỬA: Dùng hasAnyAuthority ***
                 .requestMatchers(HttpMethod.GET, "/api/appointments/**")
-                    .hasAnyRole("ADMIN", "DOCTOR", "NURSE", "PATIENT")
+                    .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
                 .requestMatchers(HttpMethod.POST, "/api/appointments/auto-schedule")
-                    .hasAnyRole("PATIENT", "DOCTOR")
+                    .hasAnyAuthority("PATIENT", "DOCTOR")
                 .requestMatchers("/api/appointments/**")
-                    .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+                    .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE")
 
                 // ✅ Info APIs
+                // *** SỬA: Dùng hasAnyAuthority ***
                 .requestMatchers("/api/info/**")
-                    .hasAnyRole("ADMIN", "DOCTOR", "NURSE", "PATIENT")
+                    .hasAnyAuthority("ADMIN", "DOCTOR", "NURSE", "PATIENT")
 
                 // ✅ Mặc định: cần xác thực
                 .anyRequest().authenticated()
@@ -81,7 +87,7 @@ public class SecurityConfig {
             // ⚙️ Thêm filter JWT vào chain
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        System.out.println("✅ SecurityConfig loaded (roles: ADMIN, DOCTOR, NURSE, PATIENT)");
+        System.out.println("✅ SecurityConfig loaded (SỬ DỤNG hasAuthority)");
         return http.build();
     }
 
