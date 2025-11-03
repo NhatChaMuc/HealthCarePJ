@@ -49,4 +49,9 @@ public class UserDetailsImpl implements UserDetails {
     @Override public boolean isEnabled() { return enabled; }
 
     public String getFullName() { return fullName; }
+
+    public boolean hasAuthority(String string) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'hasAuthority'");
+    }
 }

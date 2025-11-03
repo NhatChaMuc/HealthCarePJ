@@ -3,7 +3,7 @@ package com.nckh.yte.controller;
 import com.nckh.yte.OpenAIConfig;
 import com.nckh.yte.entity.Information;
 import com.nckh.yte.repository.InformationRepository;
-import lombok.RequiredArgsConstructor; // 💡 Đảm bảo bạn có import này
+import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.*;
@@ -15,18 +15,15 @@ import java.net.URI;
 import java.util.*;
 
 @RestController
-// ✅ FIX MAPPING: Ánh xạ tới cả /api/ai và /ai
 @RequestMapping({"/api/ai", "/ai"})
-@RequiredArgsConstructor // ✅ FIX: Để khởi tạo các fields final
+@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class DrugInfoDetailedController {
 
     private final OpenAIConfig openAIConfig;
     private final RestTemplate restTemplate;
     private final InformationRepository informationRepository;
-    
-    // ❌ LỖI TRƯỚC ĐÓ: Khai báo sai cú pháp hoặc thiếu constructor đã được khắc phục bằng @RequiredArgsConstructor
-    
+
     @PostMapping("/drug-info-full")
     public ResponseEntity<Object> getDrugInfoFull(@RequestBody Map<String, String> body) {
         String drugName = body != null ? body.get("drug") : null;
@@ -42,7 +39,6 @@ public class DrugInfoDetailedController {
             if (cached.isPresent()) {
                 String cachedJson = cached.get().getResponseData();
                 Map<String, Object> cachedResponse = new JSONObject(cachedJson).toMap();
-                // ✅ SỬA LỖI: Kiểm tra responseMap (đã được tạo)
                 if (cachedResponse.containsKey("items")) {
                      return ResponseEntity.ok(cachedResponse);
                 }
@@ -54,7 +50,7 @@ public class DrugInfoDetailedController {
         // 2. GỌI THẲNG GPT (OpenAI)
         try {
             Map<String, Object> aiResponse = callGptForDrugInfo(trimmedDrugName);
-            Map<String, Object> responseMap; // ✅ FIX: Khai báo responseMap ở đây
+            Map<String, Object> responseMap;
 
             // Kiểm tra xem AI có trả về lỗi "không tìm thấy" không
             if (aiResponse.containsKey("error")) {
@@ -70,7 +66,7 @@ public class DrugInfoDetailedController {
             List<Map<String, Object>> items = new ArrayList<>();
             items.add(aiResponse);
             
-            responseMap = Map.of("items", items); // ✅ FIX: Khởi tạo responseMap
+            responseMap = Map.of("items", items);
 
             // 3. LƯU KẾT QUẢ MỚI VÀO CACHE
             saveToCache(trimmedDrugName, responseMap);
@@ -89,9 +85,6 @@ public class DrugInfoDetailedController {
         }
     }
 
-    /**
-     * Hàm lưu cache (Đã sửa lỗi builder)
-     */
     private void saveToCache(String drugName, Map<String, Object> responseMap) {
         try {
             String responseJson = new JSONObject(responseMap).toString();
@@ -160,7 +153,6 @@ public class DrugInfoDetailedController {
             String cleanedJson = cleanGptJson(content);
             
             JSONObject drugJson = new JSONObject(cleanedJson);
-            // ✅ FIX: Đã tạo biến drugJson bên ngoài để có thể .toMap()
             return drugJson.toMap();
 
         } catch (HttpStatusCodeException ex) {

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-// ✅ FIX MAPPING: Ánh xạ tới cả /api/ai và /ai
+// ✅ ĐÃ SỬA: Dòng này là đủ để fix lỗi 404
 @RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
@@ -16,7 +16,7 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    // ... (Giữ nguyên các hàm bên trong) ...
+    // ... (Toàn bộ các hàm @PostMapping("/chat"), @GetMapping("/chat/ping"), @PostMapping("/chat/send") của bạn nằm ở đây) ...
 
     @PostMapping("/chat")
     public ResponseEntity<Map<String, Object>> chat(@RequestBody Map<String, String> body) {

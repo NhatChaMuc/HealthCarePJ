@@ -16,7 +16,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-// ✅ FIX: Sửa đường dẫn để khớp với Log (cả /api/admin và /admin)
 @RequestMapping({"/api/admin", "/admin"}) 
 @RequiredArgsConstructor
 public class AdminController {
@@ -25,8 +24,6 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
     private final DoctorRepository doctorRepository;
     private final NurseRepository nurseRepository;
-
-    // ... (Giữ nguyên các hàm bên trong) ...
 
     @GetMapping("/health")
     public ResponseEntity<?> health() {
@@ -60,7 +57,7 @@ public class AdminController {
                     String roleName = Optional.ofNullable(u.getRole())
                             .map(r -> r.getName())
                             .orElse("");
-                    return !roleName.equalsIgnoreCase("ROLE_ADMIN");
+                    return !roleName.equalsIgnoreCase("ADMIN"); 
                 })
                 .map(u -> {
                     Map<String, Object> map = new LinkedHashMap<>();
@@ -72,10 +69,8 @@ public class AdminController {
                     String role = Optional.ofNullable(u.getRole())
                             .map(r -> r.getName())
                             .orElse("");
-                    if (role.startsWith("ROLE_")) {
-                        role = role.substring(5);
-                    }
-                    map.put("role", role);
+                    
+                    map.put("role", role); 
 
                     map.put("enabled", u.isEnabled());
                     return map;

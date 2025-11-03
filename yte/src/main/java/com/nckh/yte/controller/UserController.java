@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping({"/api/user", "/user"})
 @RequiredArgsConstructor
 public class UserController {
     private final UserRepository repo;
@@ -23,7 +23,7 @@ public class UserController {
     @GetMapping("/profile/{id}")
     public ResponseEntity<?> profile(@PathVariable UUID id, Authentication auth) {
         var me = (UserDetailsImpl) auth.getPrincipal();
-        if (!me.getId().equals(id) && !me.hasRole("ADMIN"))
+        if (!me.getId().equals(id) && !me.hasAuthority("ADMIN"))
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("❌ Không có quyền");
         return ResponseEntity.ok(repo.findById(id));
     }
