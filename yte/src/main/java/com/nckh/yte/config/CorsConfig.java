@@ -14,20 +14,27 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
 
+        // ⬇️ *** THAY ĐỔI DUY NHẤT Ở ĐÂY *** ⬇️
         cfg.setAllowedOriginPatterns(List.of(
+                // Thêm URL Frontend production của bạn
+                "https://health-care-pj.vercel.app",
+
+                // Giữ lại các URL local để test
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "http://172.*.*.*:*",
                 "http://192.168.*.*:*"
         ));
+        // ⬆️ *** HẾT THAY ĐỔI *** ⬆️
+
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("Origin", "Content-Type", "Accept", "Authorization"));
         cfg.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
-        cfg.setAllowCredentials(false); // ⚠️ Cực kỳ quan trọng cho Flutter Web
+        cfg.setAllowCredentials(false); // (Giữ nguyên cài đặt của bạn)
         cfg.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
+        source.registerCorsConfiguration("/**", cfg); // Áp dụng cho mọi đường dẫn
         return source;
     }
 }
