@@ -18,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@RequestMapping("/api/appointments") // ✅ chỉ giữ 1 prefix duy nhất
+// ❗ Không đặt @RequestMapping ở class-level để có thể khai báo tuyệt đối từng endpoint
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
@@ -26,8 +26,13 @@ public class AppointmentController {
     private final NurseRepository nurseRepository;
     private final PatientRepository patientRepository;
 
-    // 🧩 Đặt lịch tự động
-    @PostMapping("/auto-schedule")
+    /**
+     * 📅 Đặt lịch tự động
+     * Hỗ trợ cả:
+     *   - POST /api/appointments/auto-schedule   (chuẩn REST)
+     *   - POST /ai/auto-schedule                 (legacy từ FE hiện tại)
+     */
+    @PostMapping({"/api/appointments/auto-schedule", "/ai/auto-schedule"})
     public ResponseEntity<Appointment> autoSchedule(@RequestBody Map<String, Object> body) {
         if (body == null) return ResponseEntity.badRequest().build();
 
@@ -46,12 +51,19 @@ public class AppointmentController {
         if (fullName == null || symptom == null || preferredDate == null || preferredWindow == null)
             return ResponseEntity.badRequest().build();
 
-        Appointment appointment = appointmentService.autoBook(fullName, email, phone, gender, symptom, preferredDate, preferredWindow);
+        Appointment appointment = appointmentService.autoBook(
+                fullName, email, phone, gender, symptom, preferredDate, preferredWindow
+        );
         return ResponseEntity.ok(appointment);
     }
 
-    // 📅 Lịch hẹn cá nhân
-    @GetMapping("/me")
+    /**
+     * 👤 Lịch hẹn của tôi
+     * Hỗ trợ cả:
+     *   - GET /api/appointments/me   (chuẩn REST)
+     *   - GET /appointments/me       (legacy từ FE hiện tại)
+     */
+    @GetMapping({"/api/appointments/me", "/appointments/me"})
     public ResponseEntity<List<Appointment>> myAppointments(Authentication authentication) {
         UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
 
