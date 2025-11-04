@@ -1,7 +1,6 @@
-
 // ignore: file_names
 import 'package:flutter/material.dart';
-import 'auth_service.dart'; // 💡 IMPORT AUTH SERVICE
+import 'auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,39 +10,36 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // ✅ Đổi tên + Thêm controller
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController roleController =
-      TextEditingController(text: "PATIENT");
+  final TextEditingController adminKeyController = TextEditingController();
   final TextEditingController roleLevelController =
       TextEditingController(text: "BASIC");
 
   bool _obscure = true;
   bool _loading = false;
 
-  // ✅ Sử dụng AuthService
-  final AuthService _authService = AuthService();
+  // 🌟 Role lựa chọn
+  String selectedRole = "PATIENT";
+  bool showAdminKey = false;
 
-  // ⛔️ Xóa baseUrl (đã chuyển vào AuthService)
+  final AuthService _authService = AuthService();
 
   @override
   void dispose() {
     fullNameController.dispose();
     usernameController.dispose();
     passwordController.dispose();
-    roleController.dispose();
+    adminKeyController.dispose();
     roleLevelController.dispose();
     super.dispose();
   }
 
-  // ✅ REFACTOR HÀM _register
   Future<void> _register() async {
     final fullName = fullNameController.text.trim();
     final username = usernameController.text.trim();
     final password = passwordController.text.trim();
-    final role = roleController.text.trim();
     final roleLevel = roleLevelController.text.trim();
 
     if (username.isEmpty || password.isEmpty || fullName.isEmpty) {
@@ -54,34 +50,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // Nếu là doctor/nurse/admin mà chưa nhập key
+    if (showAdminKey && adminKeyController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("🔐 Vui lòng nhập Admin key để xác thực vai trò này")),
+      );
+      return;
+    }
+
     setState(() => _loading = true);
 
     try {
-      // ✅ Gọi hàm register từ AuthService
       final String? error = await _authService.register(
         fullName,
-        username, // Dùng làm 'account'
+        username,
         password,
-        role,
+        selectedRole,
         roleLevel,
       );
 
       if (error == null) {
-        // Thành công
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Đăng ký thành công! Vui lòng đăng nhập.")),
         );
         if (mounted) Navigator.pop(context);
       } else {
-        // Lỗi
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("❌ $error")),
         );
       }
     } catch (e) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("❌ Lỗi không xác định: $e")),
       );
@@ -112,27 +111,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 child: Column(
                   children: [
-                    // ignore: prefer_const_constructors
                     Icon(Icons.person_add_alt_1, size: 80, color: primaryColor),
                     const SizedBox(height: 10),
-                    // ignore: prefer_const_constructors
                     Text("CREATE ACCOUNT",
-                        // ignore: prefer_const_constructors
                         style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: primaryColor)),
                     const SizedBox(height: 6),
-                    Text("Register as a Patient",
+                    Text("Register as a Patient or Staff",
                         style: TextStyle(
-                            // ignore: deprecated_member_use
                             color: primaryColor.withOpacity(0.8),
                             fontSize: 16)),
                   ],
                 ),
               ),
 
-              // ✅ THÊM TRƯỜNG "HỌ TÊN"
+              // Full name
               const Padding(
                 padding: EdgeInsets.only(left: 40.0, top: 10),
                 child: Text("Full Name",
@@ -151,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: Colors.grey, fontSize: 16.0)),
               ),
               _buildInputField(
-                controller: usernameController, // ✅ Đổi tên controller
+                controller: usernameController,
                 icon: Icons.person_outline,
                 hint: "Enter username",
               ),
@@ -177,22 +172,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
 
-              // Role
+              // Role dropdown
               const Padding(
                 padding: EdgeInsets.only(left: 40.0, top: 10),
-                child: Text("Role (optional)",
+                child: Text("Select Role",
                     style: TextStyle(color: Colors.grey, fontSize: 16.0)),
               ),
-              _buildInputField(
-                controller: roleController,
-                icon: Icons.shield_outlined,
-                hint: "PATIENT / DOCTOR ...",
+              Container(
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: selectedRole,
+                  underline: const SizedBox(),
+                  items: const [
+                    DropdownMenuItem(value: "PATIENT", child: Text("Patient")),
+                    DropdownMenuItem(value: "DOCTOR", child: Text("Doctor")),
+                    DropdownMenuItem(value: "NURSE", child: Text("Nurse")),
+                    DropdownMenuItem(value: "ADMIN", child: Text("Admin")),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedRole = value;
+                        showAdminKey = ["DOCTOR", "NURSE", "ADMIN"].contains(value);
+                      });
+                    }
+                  },
+                ),
               ),
+
+              // Admin Key field (ẩn nếu không cần)
+              if (showAdminKey) ...[
+                const Padding(
+                  padding: EdgeInsets.only(left: 40.0, top: 10),
+                  child: Text("Admin Key",
+                      style: TextStyle(color: Colors.grey, fontSize: 16.0)),
+                ),
+                _buildInputField(
+                  controller: adminKeyController,
+                  icon: Icons.vpn_key_outlined,
+                  hint: "Enter key provided by main admin",
+                ),
+              ],
 
               // Role Level
               const Padding(
                 padding: EdgeInsets.only(left: 40.0, top: 10),
-                child: Text("Role level (optional)",
+                child: Text("Role Level (optional)",
                     style: TextStyle(color: Colors.grey, fontSize: 16.0)),
               ),
               _buildInputField(
@@ -203,7 +235,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 20),
 
-              // Button
               _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _buildMainButton(
@@ -218,9 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Center(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    // ignore: prefer_const_constructors
                     child: Text("ALREADY HAVE AN ACCOUNT?",
-                        // ignore: prefer_const_constructors
                         style: TextStyle(
                             color: primaryColor,
                             fontWeight: FontWeight.w600,
@@ -235,7 +264,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // UI helpers (Không đổi)
   Widget _buildInputField({
     required TextEditingController controller,
     required IconData icon,
@@ -246,7 +274,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         border: Border.all(color: Colors.grey.withOpacity(0.5), width: 1.0),
         borderRadius: BorderRadius.circular(20.0),
       ),
@@ -259,7 +286,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Container(
               height: 30.0,
               width: 1.0,
-              // ignore: deprecated_member_use
               color: Colors.grey.withOpacity(0.5),
               margin: const EdgeInsets.only(right: 10.0)),
           Expanded(
