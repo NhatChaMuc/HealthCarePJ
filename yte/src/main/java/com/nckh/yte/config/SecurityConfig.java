@@ -15,7 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * ⚙️ Cấu hình bảo mật chính của hệ thống (JWT + Roles)
+ * ⚙️ Cấu hình bảo mật chính (JWT + Roles)
  */
 @Configuration
 @RequiredArgsConstructor
@@ -35,45 +35,45 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
-                // ✅ Public
+                // ✅ Public endpoints
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/login", "/auth/login", "/api/auth/register", "/auth/register").permitAll()
+                .requestMatchers("/api/auth/**", "/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                // 🔑 FIX CHAT: Cho phép chat và ping cho TẤT CẢ mọi người (unauthenticated)
-                .requestMatchers("/api/ai/chat", "/ai/chat").permitAll()
-                .requestMatchers("/api/ai/chat/ping", "/ai/chat/ping").permitAll()
-                
-                // 🔑 API CẦN XÁC THỰC - SỬ DỤNG hasAuthority("ROLE_...") và ÁNH XẠ KÉP
-                .requestMatchers("/api/ai/**", "/ai/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
-                .requestMatchers("/api/admin/**", "/admin/**").hasAuthority("ROLE_ADMIN") 
-                .requestMatchers("/api/doctor/**", "/doctor/**").hasAnyAuthority("ROLE_DOCTOR", "ROLE_ADMIN") 
-                .requestMatchers("/api/nurse/**", "/nurse/**").hasAnyAuthority("ROLE_NURSE", "ROLE_ADMIN") 
-                
-                // Patient APIs
-                .requestMatchers(HttpMethod.GET, "/api/patients/**", "/patients/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE")
-                .requestMatchers(HttpMethod.POST, "/api/patients/**", "/patients/**").hasAuthority("ROLE_ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/patients/**", "/patients/**").hasAuthority("ROLE_ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/patients/**", "/patients/**").hasAuthority("ROLE_ADMIN")
+                // 🧠 AI endpoints
+                .requestMatchers("/api/ai/chat", "/ai/chat", "/api/ai/chat/ping", "/ai/chat/ping").permitAll()
+                .requestMatchers("/api/ai/**", "/ai/**")
+                    .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
 
-                // Appointment APIs
-                .requestMatchers(HttpMethod.GET, "/api/appointments/**", "/appointments/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
-                .requestMatchers(HttpMethod.POST, "/api/appointments/auto-schedule", "/appointments/auto-schedule").hasAnyAuthority("ROLE_PATIENT", "ROLE_DOCTOR")
-                .requestMatchers("/api/appointments/**", "/appointments/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE")
+                // 🏥 Appointment APIs — FIXED duplicates
+                .requestMatchers(HttpMethod.GET, "/api/appointments/**")
+                    .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
+                .requestMatchers(HttpMethod.POST, "/api/appointments/auto-schedule")
+                    .hasAnyAuthority("ROLE_PATIENT", "ROLE_DOCTOR")
 
-                // Info APIs
-                .requestMatchers("/api/info/**", "/info/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
-                
-                // User API
-                .requestMatchers("/api/user/**", "/user/**").authenticated() 
-                
+                // 👩‍⚕️ Patient APIs
+                .requestMatchers(HttpMethod.GET, "/api/patients/**")
+                    .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE")
+                .requestMatchers(HttpMethod.POST, "/api/patients/**")
+                    .hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/patients/**")
+                    .hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/patients/**")
+                    .hasAuthority("ROLE_ADMIN")
+
+                // ℹ️ Info APIs
+                .requestMatchers("/api/info/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
+
+                // 👤 User API
+                .requestMatchers("/api/user/**").authenticated()
+
                 .anyRequest().authenticated()
             )
 
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        System.out.println("✅ SecurityConfig loaded (Chat is Public and Roles Consistent)");
+        System.out.println("✅ SecurityConfig loaded (Appointments fixed)");
         return http.build();
     }
 
