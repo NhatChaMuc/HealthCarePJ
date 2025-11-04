@@ -13,16 +13,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController adminKeyController = TextEditingController();
-  final TextEditingController roleLevelController =
-      TextEditingController(text: "BASIC");
+  final TextEditingController confirmPasswordController = TextEditingController();
 
   bool _obscure = true;
+  bool _obscureConfirm = true;
   bool _loading = false;
-
-  // 🌟 Role lựa chọn
-  String selectedRole = "PATIENT";
-  bool showAdminKey = false;
 
   final AuthService _authService = AuthService();
 
@@ -31,8 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     fullNameController.dispose();
     usernameController.dispose();
     passwordController.dispose();
-    adminKeyController.dispose();
-    roleLevelController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -40,53 +34,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final fullName = fullNameController.text.trim();
     final username = usernameController.text.trim();
     final password = passwordController.text.trim();
-    final roleLevel = roleLevelController.text.trim();
+    final confirm = confirmPasswordController.text.trim();
 
-    if (username.isEmpty || password.isEmpty || fullName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("⚠️ Vui lòng điền Họ tên, Username & Mật khẩu")),
-      );
+    if (fullName.isEmpty || username.isEmpty || password.isEmpty || confirm.isEmpty) {
+      _toast("⚠️ Vui lòng điền đầy đủ Họ tên, Tên đăng nhập, Mật khẩu và Nhập lại mật khẩu");
       return;
     }
-
-    // Nếu là doctor/nurse/admin mà chưa nhập key
-    if (showAdminKey && adminKeyController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("🔐 Vui lòng nhập Admin key để xác thực vai trò này")),
-      );
+    if (password.length < 6) {
+      _toast("🔐 Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+    if (password != confirm) {
+      _toast("❌ Mật khẩu nhập lại không khớp");
       return;
     }
 
     setState(() => _loading = true);
 
     try {
+      // Giữ nguyên AuthService hiện tại: truyền ngầm PATIENT/BASIC
       final String? error = await _authService.register(
         fullName,
         username,
         password,
-        selectedRole,
-        roleLevel,
+        "PATIENT", // ẩn trên UI, cố định cho bệnh nhân
+        "BASIC",   // ẩn trên UI, mặc định
       );
 
       if (error == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Đăng ký thành công! Vui lòng đăng nhập.")),
-        );
+        _toast("✅ Đăng ký thành công! Vui lòng đăng nhập.");
         if (mounted) Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ $error")),
-        );
+        _toast("❌ $error");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Lỗi không xác định: $e")),
-      );
+      _toast("❌ Lỗi không xác định: $e");
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -107,22 +96,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 padding: const EdgeInsets.only(top: 80, bottom: 60),
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                      image: AssetImage("assets/1.png"), fit: BoxFit.cover),
+                    image: AssetImage("assets/1.png"),
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 child: Column(
                   children: [
                     Icon(Icons.person_add_alt_1, size: 80, color: primaryColor),
                     const SizedBox(height: 10),
-                    Text("CREATE ACCOUNT",
-                        style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor)),
+                    Text(
+                      "CREATE PATIENT ACCOUNT",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
                     const SizedBox(height: 6),
-                    Text("Register as a Patient or Staff",
-                        style: TextStyle(
-                            color: primaryColor.withOpacity(0.8),
-                            fontSize: 16)),
+                    Text(
+                      "Register as a Patient",
+                      style: TextStyle(
+                        color: primaryColor.withOpacity(0.8),
+                        fontSize: 16,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -164,73 +161,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscure: _obscure,
                 suffix: IconButton(
                   icon: Icon(
-                      _obscure
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: Colors.grey),
+                    _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: Colors.grey,
+                  ),
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
 
-              // Role dropdown
+              // Confirm password
               const Padding(
                 padding: EdgeInsets.only(left: 40.0, top: 10),
-                child: Text("Select Role",
-                    style: TextStyle(color: Colors.grey, fontSize: 16.0)),
-              ),
-              Container(
-                margin:
-                    const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.withOpacity(0.5)),
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: selectedRole,
-                  underline: const SizedBox(),
-                  items: const [
-                    DropdownMenuItem(value: "PATIENT", child: Text("Patient")),
-                    DropdownMenuItem(value: "DOCTOR", child: Text("Doctor")),
-                    DropdownMenuItem(value: "NURSE", child: Text("Nurse")),
-                    DropdownMenuItem(value: "ADMIN", child: Text("Admin")),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        selectedRole = value;
-                        showAdminKey = ["DOCTOR", "NURSE", "ADMIN"].contains(value);
-                      });
-                    }
-                  },
-                ),
-              ),
-
-              // Admin Key field (ẩn nếu không cần)
-              if (showAdminKey) ...[
-                const Padding(
-                  padding: EdgeInsets.only(left: 40.0, top: 10),
-                  child: Text("Admin Key",
-                      style: TextStyle(color: Colors.grey, fontSize: 16.0)),
-                ),
-                _buildInputField(
-                  controller: adminKeyController,
-                  icon: Icons.vpn_key_outlined,
-                  hint: "Enter key provided by main admin",
-                ),
-              ],
-
-              // Role Level
-              const Padding(
-                padding: EdgeInsets.only(left: 40.0, top: 10),
-                child: Text("Role Level (optional)",
+                child: Text("Confirm Password",
                     style: TextStyle(color: Colors.grey, fontSize: 16.0)),
               ),
               _buildInputField(
-                controller: roleLevelController,
-                icon: Icons.stacked_bar_chart_outlined,
-                hint: "BASIC / ADVANCED ...",
+                controller: confirmPasswordController,
+                icon: Icons.lock_reset_outlined,
+                hint: "Re-enter password",
+                obscure: _obscureConfirm,
+                suffix: IconButton(
+                  icon: Icon(
+                    _obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -249,11 +204,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Center(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text("ALREADY HAVE AN ACCOUNT?",
-                        style: TextStyle(
-                            color: primaryColor,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5)),
+                    child: Text(
+                      "ALREADY HAVE AN ACCOUNT?",
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -264,6 +222,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // UI helpers
   Widget _buildInputField({
     required TextEditingController controller,
     required IconData icon,
@@ -280,23 +239,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Row(
         children: <Widget>[
           Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
-              child: Icon(icon, color: Colors.grey)),
+            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+            child: Icon(icon, color: Colors.grey),
+          ),
           Container(
-              height: 30.0,
-              width: 1.0,
-              color: Colors.grey.withOpacity(0.5),
-              margin: const EdgeInsets.only(right: 10.0)),
+            height: 30.0,
+            width: 1.0,
+            color: Colors.grey.withOpacity(0.5),
+            margin: const EdgeInsets.only(right: 10.0),
+          ),
           Expanded(
             child: TextField(
               controller: controller,
               obscureText: obscure,
               decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: hint,
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  suffixIcon: suffix),
+                border: InputBorder.none,
+                hintText: hint,
+                hintStyle: const TextStyle(color: Colors.grey),
+                suffixIcon: suffix,
+              ),
             ),
           ),
         ],
@@ -316,21 +277,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 25),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
           elevation: 4,
         ),
         onPressed: onPressed,
         child: Row(
           children: [
             const SizedBox(width: 10),
-            Text(text,
-                style: const TextStyle(color: Colors.white, fontSize: 16)),
+            Text(text, style: const TextStyle(color: Colors.white, fontSize: 16)),
             const Spacer(),
             CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.white,
-                child: Icon(icon, color: color)),
+              radius: 18,
+              backgroundColor: Colors.white,
+              child: Icon(icon, color: color),
+            ),
           ],
         ),
       ),
