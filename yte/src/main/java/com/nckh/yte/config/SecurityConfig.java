@@ -15,7 +15,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * ⚙️ Cấu hình bảo mật chính (JWT + Roles)
+ * ⚙️ Cấu hình bảo mật chính cho hệ thống Y Tế AI
+ * - JWT Stateless
+ * - Phân quyền theo ROLE
+ * - Cho phép alias cũ cho Flutter FE (/ai/... và /appointments/...)
  */
 @Configuration
 @RequiredArgsConstructor
@@ -29,27 +32,39 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // 🚫 Vô hiệu hoá CSRF, cho phép CORS
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
 
+            // ⚖️ Phân quyền truy cập
             .authorizeHttpRequests(auth -> auth
-                // ✅ Public endpoints
+
+                // 🔓 Public endpoints
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**", "/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                 // 🧠 AI endpoints
-                .requestMatchers("/api/ai/chat", "/ai/chat", "/api/ai/chat/ping", "/ai/chat/ping").permitAll()
                 .requestMatchers("/api/ai/**", "/ai/**")
                     .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
 
-                // 🏥 Appointment APIs — FIXED duplicates
-                .requestMatchers(HttpMethod.GET, "/api/appointments/**")
-                    .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
-                .requestMatchers(HttpMethod.POST, "/api/appointments/auto-schedule")
-                    .hasAnyAuthority("ROLE_PATIENT", "ROLE_DOCTOR")
+                // 🏥 Appointment APIs — hỗ trợ cả alias FE cũ
+                .requestMatchers(HttpMethod.GET,
+                        "/api/appointments/**",
+                        "/appointments/**"      // ✅ alias cũ
+                ).hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
+
+                .requestMatchers(HttpMethod.POST,
+                        "/api/appointments/auto-schedule",
+                        "/ai/auto-schedule"     // ✅ alias cũ
+                ).hasAnyAuthority("ROLE_PATIENT", "ROLE_DOCTOR")
 
                 // 👩‍⚕️ Patient APIs
                 .requestMatchers(HttpMethod.GET, "/api/patients/**")
@@ -62,23 +77,21 @@ public class SecurityConfig {
                     .hasAuthority("ROLE_ADMIN")
 
                 // ℹ️ Info APIs
-                .requestMatchers("/api/info/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
+                .requestMatchers("/api/info/**")
+                    .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
 
-                // 👤 User API
+                // 👤 User APIs
                 .requestMatchers("/api/user/**").authenticated()
 
+                // Các request khác cần xác thực
                 .anyRequest().authenticated()
             )
 
+            // 🪙 Cấu hình session stateless & JWT Filter
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        System.out.println("✅ SecurityConfig loaded (Appointments fixed)");
+        System.out.println("✅ SecurityConfig loaded with /ai/* and /appointments/* alias support");
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
     }
 }
