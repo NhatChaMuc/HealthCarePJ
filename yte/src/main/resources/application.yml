@@ -1,4 +1,4 @@
-
+z
 spring:
   datasource:
     # Đọc TOÀN BỘ thông tin DB từ Biến Môi trường
@@ -27,9 +27,9 @@ app:
 # Đọc API keys từ Biến Môi trường
 ai:
   gemini:
-     model: gemini-1.5-flash-latest
-    baseurl: "https://generativelanguage.googleapis.com/v1beta/models/"
+    model: gemini-1.5-flash-latest
     apikey: ${GEMINI_API_KEY}
+    baseurl: "https://generativelanguage.googleapis.com/v1beta/models/"
 
 
   openai:
