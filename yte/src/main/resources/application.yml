@@ -27,7 +27,7 @@ app:
 # Đọc API keys từ Biến Môi trường
 ai:
   gemini:
-    model: gemini-2.0-flash
+    model: gemini-1.5-flash
     apikey: ${GEMINI_API_KEY}
     baseurl: "https://generativelanguage.googleapis.com/v1beta/models/"
 
