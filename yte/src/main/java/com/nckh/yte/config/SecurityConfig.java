@@ -46,14 +46,16 @@ public class SecurityConfig {
             // ⚖️ Phân quyền truy cập
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 Public endpoints
+                // 🔓 Public endpoints (Cho phép truy cập tự do)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**", "/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                
+                // 👇 QUAN TRỌNG: Cho phép hiển thị lỗi (tránh bị 403 khi server lỗi)
+                .requestMatchers("/error").permitAll()
 
-                // 🧠 AI endpoints
-                .requestMatchers("/api/ai/**", "/ai/**")
-                    .hasAnyAuthority("ROLE_ADMIN", "ROLE_DOCTOR", "ROLE_NURSE", "ROLE_PATIENT")
+                // 🧠 AI endpoints (ĐÃ SỬA: Cho phép tất cả mọi người truy cập)
+                .requestMatchers("/api/ai/**", "/ai/**").permitAll()
 
                 // 🏥 Appointment APIs — hỗ trợ cả alias FE cũ
                 .requestMatchers(HttpMethod.GET,
@@ -91,7 +93,7 @@ public class SecurityConfig {
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        System.out.println("✅ SecurityConfig loaded with /ai/* and /appointments/* alias support");
+        System.out.println("✅ SecurityConfig loaded: AI Chat is now PUBLIC.");
         return http.build();
     }
 }
