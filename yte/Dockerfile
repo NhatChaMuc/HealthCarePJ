@@ -1,29 +1,26 @@
-# Giai đoạn 1: Build ứng dụng (dùng Maven và eclipse-temurin 17)
-# Đổi từ 3.8.5 sang 3.9
+# Giai đoạn 1: Build ứng dụng
 FROM maven:3.9-eclipse-temurin-17 AS build
-# Đặt thư mục làm việc
+
 WORKDIR /app
 
-# Copy file pom.xml và tải dependencies
+# Copy pom.xml và tải TẤT CẢ dependencies + plugins
 COPY pom.xml .
-RUN mvn dependency:go-offline
+RUN mvn dependency:resolve dependency:resolve-plugins
 
 # Copy toàn bộ source code
 COPY src ./src
 
-# Build ra file .jar
-RUN mvn package -DskipTests
+# Thêm "clean" để đảm bảo không bị dính class cũ lỗi
+RUN mvn clean package -DskipTests
 
 # ---
 
-# Giai đoạn 2: Chạy ứng dụng (dùng ảnh eclipse-temurin JRE chuẩn)
-# HÃY DÙNG DÒNG NÀY (Không có -slim)
+# Giai đoạn 2: Chạy ứng dụng
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
-# Copy file .jar đã build từ giai đoạn 1
+# Copy file .jar đã build
 COPY --from=build /app/target/yte-gemini-doctor-0.0.1-SNAPSHOT.jar app.jar
 
-# Render yêu cầu chạy trên một port động (biến $PORT)
 CMD ["java", "-jar", "app.jar", "--server.port=${PORT}"]
