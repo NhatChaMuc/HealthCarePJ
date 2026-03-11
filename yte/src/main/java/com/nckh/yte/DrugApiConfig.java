@@ -1,4 +1,4 @@
-package com.nckh.yte;
+package com.example.yte.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -6,8 +6,15 @@ import org.springframework.context.annotation.Configuration;
 
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "ai.drugapi")
+@ConfigurationProperties(prefix = "ai.gemini")
 public class DrugApiConfig {
-    private String baseurl;
-    private String apikey;
+
+    private String model;
+    private String apiKey;
+    private String baseUrl;
+
+    public String buildUrl() {
+        return baseUrl + model + ":generateContent?key=" + apiKey;
+    }
+
 }
