@@ -30,12 +30,11 @@ public class DoctorService {
         // Mã hóa mật khẩu
         String encoded = encoder.encode(password);
 
-        // 1️⃣ Lưu hồ sơ bác sĩ (bảng doctor)
-        Doctor doctor = Doctor.builder()
-                .fullName(fullName)
-                .username(username)
-                .password(encoded)
-                .build();
+        // 1️⃣ Lưu hồ sơ bác sĩ (bảng doctor) - KHÔNG có password
+        Doctor doctor = new Doctor();
+        doctor.setFullName(fullName);
+        doctor.setUsername(username);
+        // KHÔNG set password vì entity Doctor không có field này
         doctorRepo.save(doctor);
 
         // 2️⃣ Lấy role "DOCTOR" từ bảng roles
@@ -43,14 +42,12 @@ public class DoctorService {
                 .orElseThrow(() -> new RuntimeException("Thiếu role DOCTOR trong bảng roles"));
 
         // 3️⃣ Tạo user login — gán 1 role duy nhất
-        User user = User.builder()
-                .username(username)
-                .password(encoded)
-                .fullName(fullName)
-                .enabled(true)
-                .role(roleDoctor) // ✅ set trực tiếp, KHÔNG gọi add()
-                .build();
-
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(encoded);
+        user.setFullName(fullName);
+        user.setEnabled(true);
+        user.setRole(roleDoctor);
         userRepo.save(user);
 
         return doctor;
