@@ -1,4 +1,4 @@
-package com.example.yte.config;
+package com.nckh.yte;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
