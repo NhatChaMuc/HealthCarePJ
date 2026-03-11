@@ -1,3 +1,9 @@
+package com.nckh.yte.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -6,7 +12,7 @@
 public class Doctor {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String fullName;
