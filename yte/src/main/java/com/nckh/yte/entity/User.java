@@ -1,41 +1,29 @@
 package com.nckh.yte.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference; // ✅ Thêm import
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.UUID;
 
-@Entity
-@Table(name = "users")
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue
     private UUID id;
 
-    @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(nullable = false)
     private String password;
 
     private String fullName;
 
-    @Builder.Default
-    private boolean enabled = true;
+    private boolean enabled;
 
-    // ⚡️ Mỗi user chỉ có 1 role
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id", nullable = false)
+    @ManyToOne
     private Role role;
-
-    // 🔗 Mỗi user có thể có 1 bệnh nhân tương ứng (nếu là role PATIENT)
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonBackReference // ✅ Thêm dòng này
-    private Patient patient;
 }
