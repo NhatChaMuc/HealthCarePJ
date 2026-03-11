@@ -18,4 +18,21 @@ public class Information {
 
     @Column(columnDefinition="TEXT")
     private String responseData;
+
+    // ===== THÊM CÁC SETTER/GETTER THỦ CÔNG =====
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setResponseData(String responseData) {
+        this.responseData = responseData;
+    }
+
+    public String getResponseData() {
+        return responseData;
+    }
 }
