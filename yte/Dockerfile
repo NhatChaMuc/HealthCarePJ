@@ -1,6 +1,6 @@
 # Giai đoạn 1: Build ứng dụng (dùng Maven và eclipse-temurin 17)
-FROM maven:3.8.5-eclipse-temurin-17 AS build
-
+# Đổi từ 3.8.5 sang 3.9
+FROM maven:3.9-eclipse-temurin-17 AS build
 # Đặt thư mục làm việc
 WORKDIR /app
 
