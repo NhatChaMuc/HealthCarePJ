@@ -1,63 +1,73 @@
 package com.nckh.yte.security;
 
-import com.nckh.yte.entity.User; 
+import com.nckh.yte.entity.User;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import lombok.Getter;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.Set; 
-import java.util.Optional; 
 
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
-    private final UUID id;
-    private final String username;
-    private final String password;
-    private final String fullName;
-    private final boolean enabled;
-    private final String roleName;
-    private final Set<String> roles; 
-    private final Collection<? extends GrantedAuthority> authorities;
 
-    public UserDetailsImpl(User u) {
-        this.id = u.getId();
-        this.username = u.getUsername();
-        this.password = u.getPassword();
-        this.fullName = u.getFullName();
-        this.enabled = u.isEnabled();
+    private UUID id;
+    private String username;
+    private String password;
+    private String fullName;
+    private Collection<? extends GrantedAuthority> authorities;
 
-        String dbRole = Optional.ofNullable(u.getRole())
-                .map(r -> r.getName())
-                .orElse("PATIENT");
+    public static UserDetailsImpl build(User user) {
 
-        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + dbRole));
+        List<GrantedAuthority> authorities =
+                List.of(new SimpleGrantedAuthority(user.getRole().getName()));
 
-        this.roles = Set.of(dbRole);
-        this.roleName = dbRole;
+        return new UserDetailsImpl(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getFullName(),
+                authorities
+        );
     }
 
-    // ✅ FIX: HÀM BỊ THIẾU
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() { 
-        return this.authorities; 
-    }
-    
-    // ✅ HÀM CŨ: Dùng để kiểm tra trong Controller
-    public boolean hasAuthority(String authorityName) {
-        return this.authorities.stream()
-                .anyMatch(a -> a.getAuthority().equalsIgnoreCase(authorityName));
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
     }
 
-    @Override public String getPassword() { return password; }
-    @Override public String getUsername() { return username; }
-    @Override public boolean isAccountNonExpired() { return true; }
-    @Override public boolean isAccountNonLocked() { return true; }
-    @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return enabled; } 
-    public boolean hasRole(String roleName) { return this.roles.contains(roleName); }
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
