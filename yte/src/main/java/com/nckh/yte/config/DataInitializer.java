@@ -22,29 +22,39 @@ public class DataInitializer {
         
         return args -> {
             // 1) Đảm bảo các role (KHÔNG có prefix ROLE_) tồn tại trong DB
-            // NOTE: Nếu JwtUtil của bạn tự thêm ROLE_, DB phải lưu tên KHÔNG ROLE_
-            // Để BE có thể xử lý mapping
-            Role adminRole = roleRepo.findByName("ADMIN").orElseGet(() -> 
-                roleRepo.save(new Role(null, "ADMIN"))
-            );
-            roleRepo.findByName("DOCTOR").orElseGet(() -> 
-                roleRepo.save(new Role(null, "DOCTOR"))
-            );
-            roleRepo.findByName("NURSE").orElseGet(() -> 
-                roleRepo.save(new Role(null, "NURSE"))
-            );
-            roleRepo.findByName("PATIENT").orElseGet(() -> 
-                roleRepo.save(new Role(null, "PATIENT"))
-            );
+            // Lưu ý: Không dùng constructor có tham số để tránh lỗi Lombok
+            Role adminRole = roleRepo.findByName("ADMIN").orElseGet(() -> {
+                Role r = new Role();
+                r.setName("ADMIN");
+                return roleRepo.save(r);
+            });
+
+            roleRepo.findByName("DOCTOR").orElseGet(() -> {
+                Role r = new Role();
+                r.setName("DOCTOR");
+                return roleRepo.save(r);
+            });
+
+            roleRepo.findByName("NURSE").orElseGet(() -> {
+                Role r = new Role();
+                r.setName("NURSE");
+                return roleRepo.save(r);
+            });
+
+            roleRepo.findByName("PATIENT").orElseGet(() -> {
+                Role r = new Role();
+                r.setName("PATIENT");
+                return roleRepo.save(r);
+            });
 
             // 2) Tạo User Admin mặc định nếu nó chưa tồn tại
             if (!userRepo.existsByUsername("admin")) {
                 User u = new User();
                 u.setUsername("admin");
-                u.setPassword(encoder.encode("admin123")); 
+                u.setPassword(encoder.encode("admin123"));
                 u.setFullName("System Administrator");
                 u.setEnabled(true);
-                u.setRole(adminRole); 
+                u.setRole(adminRole); // Gán role ADMIN đã tạo ở trên
                 
                 userRepo.save(u);
                 System.out.println(">>>>>>>>>> ĐÃ TẠO USER ADMIN MẶC ĐỊNH <<<<<<<<<<");
