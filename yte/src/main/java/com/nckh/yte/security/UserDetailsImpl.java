@@ -19,7 +19,7 @@ public class UserDetailsImpl implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
     public static UserDetailsImpl build(User user) {
-        // Giữ nguyên logic build, có thể map authorities sau
+        // Nếu chưa map authorities, tạm thời để null
         return new UserDetailsImpl(
                 user.getId(),
                 user.getUsername(),
@@ -29,19 +29,18 @@ public class UserDetailsImpl implements UserDetails {
         );
     }
 
-    // === THÊM THỦ CÔNG GETTER CHO id ===
+    // ===== THÊM getId() THỦ CÔNG =====
     public UUID getId() {
         return id;
     }
 
     public boolean hasAuthority(String roleName) {
-        if (authorities == null || authorities.isEmpty()) {
-            return false;
-        }
+        if (authorities == null) return false;
         return authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals(roleName));
+                .anyMatch(a -> a.getAuthority().equals(roleName));
     }
 
+    // Các phương thức còn lại giữ nguyên
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
