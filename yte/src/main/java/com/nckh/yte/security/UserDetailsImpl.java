@@ -1,43 +1,38 @@
 package com.nckh.yte.security;
 
+import com.nckh.yte.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import org.springframework.security.core.GrantedAuthority;
 
 @Data
 @AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
     private Long id;
-
     private String username;
-
     private String password;
-
     private String fullName;
 
     private Collection<? extends GrantedAuthority> authorities;
 
+    public static UserDetailsImpl build(User user) {
+
+        return new UserDetailsImpl(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getFullName(),
+                null
+        );
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
-    }
-
-    public String getFullName(){
-        return fullName;
     }
 
     @Override
