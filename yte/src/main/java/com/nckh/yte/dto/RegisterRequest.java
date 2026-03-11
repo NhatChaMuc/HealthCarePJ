@@ -1,9 +1,14 @@
 package com.nckh.yte.dto;
+
 import lombok.*;
 
-@Getter @Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegisterRequest {
+
     private String username;
     private String password;
-    private String fullName; // tuỳ chọn; nếu FE chưa có có thể để null/"" và fallback sang username
+    private String fullName;
+
 }
