@@ -1,13 +1,12 @@
 package com.nckh.yte.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class ApiResponse {
+@AllArgsConstructor
+public class ApiResponse<T> {
+
     private String message;
-    private Object data;
+    private T data;
 }
