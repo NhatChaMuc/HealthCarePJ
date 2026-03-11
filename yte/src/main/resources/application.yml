@@ -1,37 +1,42 @@
+server:
+  port: 8080
+
 spring:
   datasource:
-    # Đọc TOÀN BỘ thông tin DB từ Biến Môi trường
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
-        "[format_sql]": true
+        format_sql: true
+
+  jackson:
+    serialization:
+      indent-output: true
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
-# Đọc JWT secret từ Biến Môi trường
 app:
   jwt:
     secret: ${JWT_SECRET}
-    expiration-ms: 86400000  # 24h
+    expiration-ms: 86400000
 
-# Đọc API keys từ Biến Môi trường
 ai:
+
   gemini:
     model: gemini-2.0-flash
-    apikey: ${GEMINI_API_KEY}
-    baseurl: "https://generativelanguage.googleapis.com/v1beta/models/"
-
+    api-key: ${GEMINI_API_KEY}
+    base-url: https://generativelanguage.googleapis.com/v1beta/models
 
   openai:
     model: gpt-4o-mini
-    apikey: ${OPENAI_API_KEY}
-    baseurl: "https://api.openai.com/v1"
+    api-key: ${OPENAI_API_KEY}
+    base-url: https://api.openai.com/v1/chat/completions
