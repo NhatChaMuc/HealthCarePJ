@@ -1,19 +1,20 @@
 package com.nckh.yte.config;
 
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Getter
+@Setter
 @Configuration
+@ConfigurationProperties(prefix = "gemini")
 public class GeminiProps {
 
-    @Value("${ai.gemini.apikey:}")
     private String apiKey;
 
-    @Value("${ai.gemini.baseurl}")
     private String baseUrl;
 
-    @Value("${ai.gemini.model:gemini-1.5-flash}")
     private String model;
+
 }
